@@ -1,4 +1,12 @@
 Revision history for Perl extension RPi::ADS1x15.
 
+0.03 NOREL
+        - remove comments from C code
+        - layout/cleanup of XS code
+        - lowercase vars in XS
+
+0.02    2017-01-07
+        - POD additions/cleanup
+
 0.01    2017-01-07
         - initial version

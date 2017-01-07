@@ -11,22 +11,19 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
-float fetch(int ADS_ADDRESS, const char * dev_name){
-
-//    const char * dev_name = "/dev/i2c-1";
-    int i2c_file;
-
+float fetch(int ads_address, const char * dev_name){
+    
     uint8_t write_buf[3];
     uint8_t read_buf[2];
 
-    i2c_file = open(dev_name, O_RDWR);
+    int i2c_file = open(dev_name, O_RDWR);
 
     if (i2c_file == -1){
         perror(dev_name);
         exit(1);
     }
     
-    if (ioctl(i2c_file, I2C_SLAVE, ADS_ADDRESS) < 0){
+    if (ioctl(i2c_file, I2C_SLAVE, ads_address) < 0){
         perror("failed to acquire bus access and/or talk to slave");
         exit(1);
     }
@@ -63,8 +60,7 @@ MODULE = RPi::ADS1x15  PACKAGE = RPi::ADS1x15
 
 PROTOTYPES: DISABLE
 
-
 float
-fetch (ADS_ADDRESS, dev_name)
-	int	ADS_ADDRESS
+fetch (ads_address, dev_name)
+    int	ads_address
     const char * dev_name
