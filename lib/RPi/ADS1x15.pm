@@ -36,6 +36,9 @@ Raspberry Pi
 Perl interface to the Adafruit ADS 1x15 series Analog to Digital Converters
 (ADC) on the Raspberry Pi.
 
+In this first release, only channel 0 on the ADC is available. Next version
+will provide provisions to access them all.
+
 =head2 EXPORT
 
 None by default.
