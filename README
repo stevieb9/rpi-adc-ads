@@ -1,40 +1,51 @@
-RPi-ADS1x15 version 0.01
-========================
+NAME
+    RPi::ADS1x15 - Interface to ADS1x15 series analog to digital converters
+    (ADC) on Raspberry Pi
 
-The README is used to introduce the module and provide instructions on
-how to install the module, any machine dependencies it may have (for
-example C compilers and installed libraries) and any other information
-that should be provided before the module is installed.
+SYNOPSIS
+      use RPi::ADS1x15 qw(fetch);
 
-A README file is required for CPAN modules since CPAN extracts the
-README file from a module distribution so that people browsing the
-archive can use it get an idea of the modules uses. It is usually a
-good idea to provide version information here so that people can
-decide whether fixes for the module are worth downloading.
+      my $adc_addr = 0x48;
+      my $i2c_dev  = "/dev/i2c-1";
 
-INSTALLATION
+      my $volts = fetch($adc_addr, $i2c_dev)
 
-To install this module type the following:
+DESCRIPTION
+    Perl interface to the Adafruit ADS 1x15 series Analog to Digital
+    Converters (ADC) on the Raspberry Pi.
 
-   perl Makefile.PL
-   make
-   make test
-   make install
+    In this first release, only channel 0 on the ADC is available. Next
+    version will provide provisions to access them all.
 
-DEPENDENCIES
+  EXPORT
+    None by default.
 
-This module requires these other modules and libraries:
+  EXPORT_OK
+    Exports `fetch()' on demand.
 
-  blah blah blah
+FUNCTIONS
+  fetch
+    Returns a float that represents the analog voltage level.
 
-COPYRIGHT AND LICENCE
+    Parameters:
 
-Put the correct copyright and licence information here.
+    $adc_addr
+    Mandatory. The hex location of the ADC. By default, `0x48'.
 
-Copyright (C) 2017 by A. U. Thor
+    $i2c_dev
+    Mandatory. The filesystem path to the i2c device file. Typically
+    `/dev/i2c-1'.
 
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself, either Perl version 5.22.2 or,
-at your option, any later version of Perl 5 you may have available.
+SEE ALSO
+    WiringPi::API, RPi::WiringPi, RPi::DHT11
 
+AUTHOR
+    Steve Bertrand, <steveb@cpan.org>
+
+COPYRIGHT AND LICENSE
+    Copyright (C) 2017 by Steve Bertrand
+
+    This library is free software; you can redistribute it and/or modify it
+    under the same terms as Perl itself, either Perl version 5.22.2 or, at
+    your option, any later version of Perl 5 you may have available.
 
