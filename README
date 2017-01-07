@@ -17,6 +17,21 @@ DESCRIPTION
     In this first release, only channel 0 on the ADC is available. Next
     version will provide provisions to access them all.
 
+PHYSICAL SETUP
+    List of pinouts between the ADC and the Raspberry Pi.
+
+        ADC     Pi
+        -----------
+        VDD     Vcc
+        GND     Gnd
+        SCL     SCL (NOT SCLK)
+        SDA     SDA
+        ADDR    Gnd
+        ALRT    NC  (no connect)
+
+    Pinouts `A0' through `A3' on the ADC are the analog pins used to connect
+    to external peripherals.
+
   EXPORT
     None by default.
 
@@ -30,7 +45,8 @@ FUNCTIONS
     Parameters:
 
     $adc_addr
-    Mandatory. The hex location of the ADC. By default, `0x48'.
+    Mandatory. The hex location of the ADC. If the pinout in PHYSICAL SETUP
+    is used, this will be `0x48'.
 
     $i2c_dev
     Mandatory. The filesystem path to the i2c device file. Typically

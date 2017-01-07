@@ -3,7 +3,7 @@ package RPi::ADS1x15;
 use strict;
 use warnings;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 require XSLoader;
 XSLoader::load('RPi::ADS1x15', $VERSION);
@@ -39,6 +39,22 @@ Perl interface to the Adafruit ADS 1x15 series Analog to Digital Converters
 In this first release, only channel 0 on the ADC is available. Next version
 will provide provisions to access them all.
 
+=head1 PHYSICAL SETUP
+
+List of pinouts between the ADC and the Raspberry Pi.
+
+    ADC     Pi
+    -----------
+    VDD     Vcc
+    GND     Gnd
+    SCL     SCL (NOT SCLK)
+    SDA     SDA
+    ADDR    Gnd
+    ALRT    NC  (no connect)
+
+Pinouts C<A0> through C<A3> on the ADC are the analog pins used to connect to
+external peripherals.
+
 =head2 EXPORT
 
 None by default.
@@ -57,7 +73,8 @@ Parameters:
 
 =head3 $adc_addr
 
-Mandatory. The hex location of the ADC. By default, C<0x48>.
+Mandatory. The hex location of the ADC. If the pinout in L</PHYSICAL SETUP> is
+used, this will be C<0x48>.
 
 =head3 $i2c_dev
 
