@@ -1,9 +1,9 @@
 use warnings;
 use strict;
 
-use RPi::ADS1x15 qw(fetch);
+use RPi::ADC::ADS qw(fetch);
 
-my $adc = RPi::ADS1x15->new;
+my $adc = RPi::ADC::ADS->new;
 
 while (1){
     print "a0: ". $adc->read('a0') ."\n";

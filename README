@@ -1,9 +1,9 @@
 NAME
-    RPi::ADS1x15 - Interface to ADS1x15 series analog to digital converters
-    (ADC) on Raspberry Pi
+    RPi::ADC::ADS - Interface to ADS 1xxx series analog to digital
+    converters (ADC) on Raspberry Pi
 
 SYNOPSIS
-      use RPi::ADS1x15 qw(fetch);
+      use RPi::ADC::ADS qw(fetch);
 
       my $adc_addr = 0x48;
       my $i2c_dev  = "/dev/i2c-1";
@@ -33,24 +33,88 @@ PHYSICAL SETUP
     to external peripherals.
 
   EXPORT
-    None by default.
+    None by default. =head2 EXPORT_OK
 
-  EXPORT_OK
     Exports `fetch()' on demand.
 
-FUNCTIONS
-  fetch
-    Returns a float that represents the analog voltage level.
-
+METHODS
+  new
     Parameters:
 
-    $adc_addr
-    Mandatory. The hex location of the ADC. If the pinout in PHYSICAL SETUP
-    is used, this will be `0x48'.
+    addr
+    Optional. The hex location of the ADC. If the pinout in PHYSICAL SETUP
+    is used, this will be `0x48' (which is the default if not supplied).
 
-    $i2c_dev
-    Mandatory. The filesystem path to the i2c device file. Typically
-    `/dev/i2c-1'.
+    device
+    Optional. The filesystem path to the i2c device file. Defaults to
+    `/dev/i2c-1'
+
+TECHNICAL DATA
+  REGISTERS
+    The write buffer consists of an array with three elements. Element `0'
+    selects the register to use. `0' for the conversion register and `1' for
+    the configuration register.
+
+    Element `1' is a byte long, and represents bits 15-8 of a register,
+    while element `2' represents bits 7-0.
+
+  CONFIG REGISTER
+    Bit 15 should always be set to `1' when writing. This initiates a
+    conversation ADC. When reading, this bit will read `1' if a conversion
+    is currently occuring, and `0' if the current conversion is complete.
+
+    Bits 14-12 represent the ADC input channel, as well as either a
+    single-ended (difference between HIGH and GRD) or differential mode
+    (difference between two input channels). Only single-ended is currently
+    supported.
+
+    Below is the binary representation for the input channels (bits 14-12):
+
+        Input   Binary
+        A0      100
+        A1      101
+        A2      110
+        A3      111
+
+    Bits 11-9 are for the programmable gain amplifier. This software uses
+    `001' or 4.096V to cover the Pi's 3.3V output.
+
+        000: FS = ±6.144V(1)           100: FS = ±0.512V
+        001: FS = ±4.096V(1)           101: FS = ±0.256V
+        010: FS = ±2.048V (hw default) 110: FS = ±0.256V
+        011: FS = ±2.024V              111: FS = ±0.256V
+
+    Bit 8 is for the conversion operation mode. We use single conversion
+    hardware default.
+
+        0: continuous conversion
+        1: single conversion (hw default)
+
+    Bits 9-5 represent the data rate. We use 128SPS:
+
+        000 : 128SPS 100 : 1600SPS (hw default)
+        001 : 250SPS 101 : 2400SPS
+        010 : 490SPS 110 : 3300SPS
+        011 : 920SPS 111 : 3300SPS
+
+    Bit 4 is unused.
+
+    Bit 3 is the comparator polarity. We use Active Low by default:
+
+        0 - Active Low (hw default)
+        1 - Active High
+
+    Bit 2 is unused.
+
+    Bits 1-0 represent the comparator queue. This software has disabled it:
+
+        00 : Assert after one conversion
+        01 : Assert after two conversions
+        10 : Assert after four conversions
+        11 : Disable comparator (default)
+
+    See the https://cdn-shop.adafruit.com/datasheets/ads1015.pdf for further
+    information.
 
 SEE ALSO
     WiringPi::API, RPi::WiringPi, RPi::DHT11

@@ -56,7 +56,7 @@ float fetch(int ads_address, const char * dev_name, char * wbuf2, char * wbuf1){
     return (float)result * 4.096/32767.0;
 }
 
-MODULE = RPi::ADS1x15  PACKAGE = RPi::ADS1x15
+MODULE = RPi::ADC::ADS  PACKAGE = RPi::ADC::ADS
 
 PROTOTYPES: DISABLE
 

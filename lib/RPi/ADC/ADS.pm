@@ -1,4 +1,4 @@
-package RPi::ADS1x15;
+package RPi::ADC::ADS;
 
 use strict;
 use warnings;
@@ -6,7 +6,7 @@ use warnings;
 our $VERSION = '0.03';
 
 require XSLoader;
-XSLoader::load('RPi::ADS1x15', $VERSION);
+XSLoader::load('RPi::ADC::ADS', $VERSION);
 
 my %mux = (
     # channels
@@ -121,12 +121,12 @@ __END__
 
 =head1 NAME
 
-RPi::ADS1x15 - Interface to ADS1x15 series analog to digital converters (ADC) on
-Raspberry Pi
+RPi::ADC::ADS - Interface to ADS 1xxx series analog to digital converters (ADC)
+on Raspberry Pi
 
 =head1 SYNOPSIS
 
-  use RPi::ADS1x15 qw(fetch);
+  use RPi::ADC::ADS qw(fetch);
 
   my $adc_addr = 0x48;
   my $i2c_dev  = "/dev/i2c-1";

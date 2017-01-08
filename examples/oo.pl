@@ -3,10 +3,9 @@ use strict;
 use feature 'say';
 
 use Data::Dumper;
-use RPi::ADS1x15;
+use RPi::ADC::ADS;
 
-my $adc = RPi::ADS1x15->new;
+my $adc = RPi::ADC::ADS->new;
 
-say $adc->read;
 say $adc->read('a0');
 say $adc->read('a3');
