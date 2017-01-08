@@ -4,6 +4,9 @@ Revision history for Perl extension RPi::ADS1x15.
         - remove comments from C code
         - layout/cleanup of XS code
         - lowercase vars in XS
+        - changed to OO format
+        - C fetch() now accessible to library only
+        - added config register details in POD
 
 0.02    2017-01-07
         - POD additions/cleanup

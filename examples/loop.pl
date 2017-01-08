@@ -3,11 +3,10 @@ use strict;
 
 use RPi::ADS1x15 qw(fetch);
 
-my $addr = 0x48;
-my $i2c  = '/dev/i2c-1');
+my $adc = RPi::ADS1x15->new;
 
 while (1){
-    my $volts = fetch($addr, $i2c);
-    print "analog level: $volts\n";
-    sleep 2;
+    print "a0: ". $adc->read('a0') ."\n";
+    print "a3: ". $adc->read('a3') ."\n";
+    sleep 1;
 }

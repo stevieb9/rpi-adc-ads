@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
-float fetch(int ads_address, const char * dev_name){
+float fetch(int ads_address, const char * dev_name, char * wbuf2, char * wbuf1){
     
     uint8_t write_buf[3];
     uint8_t read_buf[2];
@@ -29,8 +29,8 @@ float fetch(int ads_address, const char * dev_name){
     }
 
     write_buf[0] = 1;
-    write_buf[1] = 0xC3;
-    write_buf[2] = 0x03;
+    write_buf[1] = strtol(wbuf1, NULL, 0);
+    write_buf[2] = strtol(wbuf2, NULL, 0);
 
     read_buf[0]= 0;        
     read_buf[1]= 0;
@@ -61,6 +61,8 @@ MODULE = RPi::ADS1x15  PACKAGE = RPi::ADS1x15
 PROTOTYPES: DISABLE
 
 float
-fetch (ads_address, dev_name)
+fetch (ads_address, dev_name, wbuf2, wbuf1)
     int	ads_address
     const char * dev_name
+    char * wbuf2
+    char * wbuf1
