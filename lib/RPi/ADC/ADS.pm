@@ -10,18 +10,15 @@ XSLoader::load('RPi::ADC::ADS', $VERSION);
 
 my %mux = (
     # channels
-    A0 => '100',
-    A1 => '101',
-    A2 => '110',
-    A3 => '111',
-    a0 => '100',
-    a1 => '101',
-    a2 => '110',
-    a3 => '111',
+    0 => '100',
+    1 => '101',
+    2 => '110',
+    3 => '111',
 );
 
 sub new {
     my ($class, %args) = @_;
+    # model
     # addr (done)
     # dev (done)
     # channel (done)
@@ -33,6 +30,7 @@ sub new {
 
     $self->_register_default;
 
+    $self->model($args{model});
     $self->addr($args{addr});
     $self->device($args{device});
     $self->channel($args{channel});
@@ -47,10 +45,10 @@ sub addr {
 sub channel {
     my ($self, $chan) = @_;
 
-    $chan = defined $chan ? $chan : 'A0';
+    $chan = defined $chan ? $chan : '0';
 
     if (defined $chan){
-        my $bin = uc $mux{$chan};
+        my $bin = $mux{$chan};
         my $reg = $self->register;
         
         substr $reg, 1, 3, $bin;
@@ -62,6 +60,18 @@ sub device {
     my ($self, $dev) = @_;
     $self->{device} = $dev if defined $dev;
     return defined $self->{device} ? $self->{device} : '/dev/i2c-1'; 
+}
+sub model {
+    my ($self, $model) = @_;
+    $self->{model} = $model if defined $model;
+    
+    $self->{model} = defined $self->{model} ? $self->{model} : 'ADS1015';
+
+    my ($model_num) = $self->{model} =~ /(\d+)/;
+
+    $self->_resolution($model_num);
+
+    return $self->{model};
 }
 sub register {
     my ($self, $bin) = @_;
@@ -97,10 +107,23 @@ sub _register_default {
     my $bit_7_0  = '00000011'; # 0x03
     $self->register($bit_9_15 . $bit_7_0);
 }
+sub _resolution {
+    my ($self, $model) = @_;
+
+    if (defined $model){
+        if ($model =~ /11\d{2}/){
+            $self->{resolution} = 16;
+        }
+        else {
+            $self->{resolution} = 12;
+        }
+    }
+    return $self->{resolution};
+}
 
 # device methods
 
-sub read {
+sub volts {
     my ($self, $channel) = @_;
 
     if (defined $channel){
@@ -111,8 +134,39 @@ sub read {
     my $dev = $self->device;
     my @write_buf = $self->_bytes;
 
-    return fetch($addr, $dev, $write_buf[1], $write_buf[0]);
+    return voltage($addr, $dev, $write_buf[1], $write_buf[0], $self->_resolution);
 }
+sub raw {
+    my ($self, $channel) = @_;
+
+    if (defined $channel){
+        $self->channel($channel);
+    }
+
+    my $addr = $self->addr;
+    my $dev = $self->device;
+    my @write_buf = $self->_bytes;
+
+    return raw_c($addr, $dev, $write_buf[1], $write_buf[0], $self->_resolution);
+}
+sub percent {
+    my ($self, $channel) = @_;
+
+    if (defined $channel){
+        $self->channel($channel);
+    }
+
+    my $addr = $self->addr;
+    my $dev = $self->device;
+    my @write_buf = $self->_bytes;
+
+    my $percent = percent_c(
+        $addr, $dev, $write_buf[1], $write_buf[0], $self->_resolution
+    );
+
+    return sprintf("%.2f", $percent);
+}
+
 sub _vim {}
 
 1;
@@ -130,7 +184,17 @@ on Raspberry Pi
 
     my $adc = RPi::ADC::ADS->new;
 
-    my $level = $apc->read;
+    # voltage level
+
+    my $volts = $apc->volts;
+
+    # percent of input capacity
+
+    my $percent = $apc->percent;
+
+    # raw input value 
+
+    my $integer = $apc->raw;
 
 =head1 DESCRIPTION
 
@@ -149,17 +213,35 @@ List of pinouts between the ADC and the Raspberry Pi.
     GND     Gnd
     SCL     SCL (NOT SCLK)
     SDA     SDA
-    ADDR    Gnd
+    ADDR    Gnd (see below for more info)
     ALRT    NC  (no connect)
 
 Pinouts C<A0> through C<A3> on the ADC are the analog pins used to connect to
-external peripherals.
+external peripherals (specified in this software as C<0> through C<3>).
+
+The C<ADDR> pin specifies the memory address of the ADC unit. Four ADCs can be
+connected to the i2c bus at any one time. By default, this software uses
+address C<0x48>, which is the address when the C<ADDR> pin is connected to
+C<Gnd> on the Raspberry Pi. Here are the addresses for the four Pi pins:
+
+    Pin     Address
+    ---------------
+    Gnd     0x48
+    VDD     0x49
+    SDA     0x4A
+    SCL     0x4B
 
 =head1 METHODS
 
 =head2 new
 
 Parameters:
+
+=head3 model
+
+Optional. The model number of the ADC. If not specified, we use C<ADS1015>.
+Models that start with C<ADS11> have 16-bit accuracy resolution, and models
+that start with C<ADS10> have 12-bit resolution.
 
 =head3 addr
 
@@ -172,23 +254,35 @@ Optional. The filesystem path to the i2c device file. Defaults to C</dev/i2c-1>
 
 =head3 channel
 
-Optional. One of C<A0> through C<A3> which specifies which channel to read. If
-not sent in, we default to C<A0> throughout the object's lifecycle.
+Optional. One of C<0> through C<A3> which specifies which channel to read. If
+not sent in, we default to C<0> throughout the object's lifecycle.
 
-=head2 read($channel)
+=head2 volts($channel)
 
-Fetches the data from the ADC as the specified input channel.
+Retrieves the voltage level of the channel.
 
 Parameters:
 
 =head3 $channel
 
-Optional: String, C<A0> through C<A3>, representing the ADC input channel to
+Optional: String, C<0> through C<3>, representing the ADC input channel to
 read from. Setting this parameter allows you to read all four channels without
 changing the default set in the object.
 
 Return: A floating point number between C<0> and the maximum voltage output by
 the Pi's GPIO pins.
+
+=head2 percent($channel)
+
+Retrieves the ADC channel's input value by percentage of maximum input.
+
+Parameters: See C<$channel> in L</volts>.
+
+=head2 raw($channel)
+
+Retrieves the raw value of the ADC channel's input value.
+
+Parameters: See C<$channel> in L</volts>.
 
 =head2 addr($hex)
 
@@ -209,7 +303,7 @@ Parameters:
 
 =head3 $mux
 
-Optional: String, C<A0> through C<A3>, representing the ADC's multiplexer
+Optional: String, C<0> through C<3>, representing the ADC's multiplexer
 input channel to read from.
 
 =head2 register($binary)

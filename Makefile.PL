@@ -24,5 +24,5 @@ WriteMakefile(
     },
     PREREQ_PM         => {
     },
-    CCFLAGS => => '-Wno-unused-result',
+#    CCFLAGS => => '-Wno-unused-result',
 );

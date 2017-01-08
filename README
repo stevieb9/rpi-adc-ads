@@ -3,19 +3,27 @@ NAME
     converters (ADC) on Raspberry Pi
 
 SYNOPSIS
-      use RPi::ADC::ADS qw(fetch);
+        use RPi::ADC::ADS;
 
-      my $adc_addr = 0x48;
-      my $i2c_dev  = "/dev/i2c-1";
+        my $adc = RPi::ADC::ADS->new;
 
-      my $volts = fetch($adc_addr, $i2c_dev)
+        # voltage level
+
+        my $volts = $apc->volts;
+
+        # percent of input capacity
+
+        my $percent = $apc->percent;
+
+        # raw input value 
+
+        my $integer = $apc->raw;
 
 DESCRIPTION
-    Perl interface to the Adafruit ADS 1x15 series Analog to Digital
+    Perl interface to the Adafruit ADS 1xxx series Analog to Digital
     Converters (ADC) on the Raspberry Pi.
 
-    In this first release, only channel 0 on the ADC is available. Next
-    version will provide provisions to access them all.
+    Provides access via the i2c bus to all four input channels on each ADC.
 
 PHYSICAL SETUP
     List of pinouts between the ADC and the Raspberry Pi.
@@ -26,20 +34,33 @@ PHYSICAL SETUP
         GND     Gnd
         SCL     SCL (NOT SCLK)
         SDA     SDA
-        ADDR    Gnd
+        ADDR    Gnd (see below for more info)
         ALRT    NC  (no connect)
 
     Pinouts `A0' through `A3' on the ADC are the analog pins used to connect
-    to external peripherals.
+    to external peripherals (specified in this software as `0' through `3').
 
-  EXPORT
-    None by default. =head2 EXPORT_OK
+    The `ADDR' pin specifies the memory address of the ADC unit. Four ADCs
+    can be connected to the i2c bus at any one time. By default, this
+    software uses address `0x48', which is the address when the `ADDR' pin
+    is connected to `Gnd' on the Raspberry Pi. Here are the addresses for
+    the four Pi pins:
 
-    Exports `fetch()' on demand.
+        Pin     Address
+        ---------------
+        Gnd     0x48
+        VDD     0x49
+        SDA     0x4A
+        SCL     0x4B
 
 METHODS
   new
     Parameters:
+
+    model
+    Optional. The model number of the ADC. If not specified, we use
+    `ADS1015'. Models that start with `ADS11' have 16-bit accuracy
+    resolution, and models that start with `ADS10' have 12-bit resolution.
 
     addr
     Optional. The hex location of the ADC. If the pinout in PHYSICAL SETUP
@@ -48,6 +69,61 @@ METHODS
     device
     Optional. The filesystem path to the i2c device file. Defaults to
     `/dev/i2c-1'
+
+    channel
+    Optional. One of `0' through `A3' which specifies which channel to read.
+    If not sent in, we default to `0' throughout the object's lifecycle.
+
+  volts($channel)
+    Retrieves the voltage level of the channel.
+
+    Parameters:
+
+    $channel
+    Optional: String, `0' through `3', representing the ADC input channel to
+    read from. Setting this parameter allows you to read all four channels
+    without changing the default set in the object.
+
+    Return: A floating point number between `0' and the maximum voltage
+    output by the Pi's GPIO pins.
+
+  percent($channel)
+    Retrieves the ADC channel's input value by percentage of maximum input.
+
+    Parameters: See `$channel' in volts.
+
+  raw($channel)
+    Retrieves the raw value of the ADC channel's input value.
+
+    Parameters: See `$channel' in volts.
+
+  addr($hex)
+    Sets/gets the ADC memory address. After object instantiation, this
+    method should only be used to get (ie. don't send in any parameters.
+
+    Parameters:
+
+    $hex
+    Optional: A memory address in the form `0xNN'.
+
+  channel($mux)
+    Sets/gets the currently registered ADC input channel within the object.
+
+    Parameters:
+
+    $mux
+    Optional: String, `0' through `3', representing the ADC's multiplexer
+    input channel to read from.
+
+  register($binary)
+    Sets/gets the ADC's registers. This has been left public for convenience
+    for those who understand the hardware very well. It really shouldn't be
+    used otherwise.
+
+    Parameters:
+
+    $binary
+    Optional: A binary string (literal 1s and 0s), 32 bits long.
 
 TECHNICAL DATA
   REGISTERS
@@ -71,6 +147,7 @@ TECHNICAL DATA
     Below is the binary representation for the input channels (bits 14-12):
 
         Input   Binary
+
         A0      100
         A1      101
         A2      110

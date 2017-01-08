@@ -11,7 +11,10 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
-float fetch(int ads_address, const char * dev_name, char * wbuf2, char * wbuf1){
+#define BIT_MAX_12 1649
+#define BIT_MAX_16 26400
+
+int fetch(int ads_address, const char * dev_name, char * wbuf2, char * wbuf1, int resolution){
     
     uint8_t write_buf[3];
     uint8_t read_buf[2];
@@ -49,20 +52,88 @@ float fetch(int ads_address, const char * dev_name, char * wbuf2, char * wbuf1){
 
     read(i2c_file, read_buf, 2);
 
-    int16_t result = read_buf[0] << 8 | read_buf[1];
-  
+    int16_t conversion = read_buf[0] << 8 | read_buf[1];
+
+    if (resolution == 12){
+        conversion = conversion >> 4;
+    }
+   
     close(i2c_file);
 
-    return (float)result * 4.096/32767.0;
+    return conversion;
+}
+
+float voltage (int ads_address, const char * dev_name, char * wbuf2, char * wbuf1, int resolution){
+   
+    int conversion = fetch(ads_address, dev_name, wbuf2, wbuf1, resolution);
+    
+    float volts;
+     
+    if (resolution == 12){
+        volts = (float)conversion * 4.096 / 2048.0;
+    }
+    else {
+        volts = (float)conversion * 4.096 / 32767.0;
+    }
+
+    return volts;
+}
+
+int raw_c (int ads_address, const char * dev_name, char * wbuf2, char * wbuf1, int resolution){
+   
+    int conversion = fetch(ads_address, dev_name, wbuf2, wbuf1, resolution);
+
+    return conversion;
+}
+
+float percent_c (int ads_address, const char * dev_name, char * wbuf2, char * wbuf1, int resolution){
+
+    int conversion = fetch(ads_address, dev_name, wbuf2, wbuf1, resolution);
+
+    float percent;
+
+    if (resolution == 12){
+        percent = (float)conversion / BIT_MAX_12 * 100;
+    }
+    else {
+        percent = (float)conversion / BIT_MAX_16 * 100;
+    }
+
+    return percent;
 }
 
 MODULE = RPi::ADC::ADS  PACKAGE = RPi::ADC::ADS
 
 PROTOTYPES: DISABLE
 
-float
-fetch (ads_address, dev_name, wbuf2, wbuf1)
+int
+fetch (ads_address, dev_name, wbuf2, wbuf1, resolution)
     int	ads_address
     const char * dev_name
     char * wbuf2
     char * wbuf1
+    int resolution
+
+float
+voltage (ads_address, dev_name, wbuf2, wbuf1, resolution)
+    int	ads_address
+    const char * dev_name
+    char * wbuf2
+    char * wbuf1
+    int resolution
+
+int
+raw_c (ads_address, dev_name, wbuf2, wbuf1, resolution)
+    int	ads_address
+    const char * dev_name
+    char * wbuf2
+    char * wbuf1
+    int resolution
+
+float
+percent_c (ads_address, dev_name, wbuf2, wbuf1, resolution)
+    int	ads_address
+    const char * dev_name
+    char * wbuf2
+    char * wbuf1
+    int resolution
