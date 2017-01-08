@@ -18,7 +18,6 @@ my %mux = (
     a1 => '101',
     a2 => '110',
     a3 => '111',
-
 );
 
 sub new {
@@ -114,6 +113,7 @@ sub read {
 
     return fetch($addr, $dev, $write_buf[1], $write_buf[0]);
 }
+sub _vim {}
 
 1;
 
@@ -126,20 +126,18 @@ on Raspberry Pi
 
 =head1 SYNOPSIS
 
-  use RPi::ADC::ADS qw(fetch);
+    use RPi::ADC::ADS;
 
-  my $adc_addr = 0x48;
-  my $i2c_dev  = "/dev/i2c-1";
+    my $adc = RPi::ADC::ADS->new;
 
-  my $volts = fetch($adc_addr, $i2c_dev)
+    my $level = $apc->read;
 
 =head1 DESCRIPTION
 
-Perl interface to the Adafruit ADS 1x15 series Analog to Digital Converters
+Perl interface to the Adafruit ADS 1xxx series Analog to Digital Converters
 (ADC) on the Raspberry Pi.
 
-In this first release, only channel 0 on the ADC is available. Next version
-will provide provisions to access them all.
+Provides access via the i2c bus to all four input channels on each ADC.
 
 =head1 PHYSICAL SETUP
 
@@ -157,13 +155,6 @@ List of pinouts between the ADC and the Raspberry Pi.
 Pinouts C<A0> through C<A3> on the ADC are the analog pins used to connect to
 external peripherals.
 
-=head2 EXPORT
-
-None by default.
-=head2 EXPORT_OK
-
-Exports C<fetch()> on demand.
-
 =head1 METHODS
 
 =head2 new
@@ -178,6 +169,60 @@ used, this will be C<0x48> (which is the default if not supplied).
 =head3 device
 
 Optional. The filesystem path to the i2c device file. Defaults to C</dev/i2c-1>
+
+=head3 channel
+
+Optional. One of C<A0> through C<A3> which specifies which channel to read. If
+not sent in, we default to C<A0> throughout the object's lifecycle.
+
+=head2 read($channel)
+
+Fetches the data from the ADC as the specified input channel.
+
+Parameters:
+
+=head3 $channel
+
+Optional: String, C<A0> through C<A3>, representing the ADC input channel to
+read from. Setting this parameter allows you to read all four channels without
+changing the default set in the object.
+
+Return: A floating point number between C<0> and the maximum voltage output by
+the Pi's GPIO pins.
+
+=head2 addr($hex)
+
+Sets/gets the ADC memory address. After object instantiation, this method
+should only be used to get (ie. don't send in any parameters.
+
+Parameters:
+
+=head3 $hex 
+
+Optional: A memory address in the form C<0xNN>.
+
+=head2 channel($mux)
+
+Sets/gets the currently registered ADC input channel within the object.
+
+Parameters:
+
+=head3 $mux
+
+Optional: String, C<A0> through C<A3>, representing the ADC's multiplexer
+input channel to read from.
+
+=head2 register($binary)
+
+Sets/gets the ADC's registers. This has been left public for convenience for
+those who understand the hardware very well. It really shouldn't be used
+otherwise.
+
+Parameters:
+
+=head3 $binary
+
+Optional: A binary string (literal 1s and 0s), 32 bits long.
 
 =head1 TECHNICAL DATA
 
@@ -203,6 +248,7 @@ two input channels). Only single-ended is currently supported.
 Below is the binary representation for the input channels (bits 14-12):
 
     Input   Binary
+
     A0      100
     A1      101
     A2      110
