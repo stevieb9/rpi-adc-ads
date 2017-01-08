@@ -23,7 +23,9 @@ DESCRIPTION
     Perl interface to the Adafruit ADS 1xxx series Analog to Digital
     Converters (ADC) on the Raspberry Pi.
 
-    Provides access via the i2c bus to all four input channels on each ADC.
+    Provides access via the i2c bus to all four input channels on each ADC,
+    while performing correct bit-shifting between the 12-bit and 16-bit
+    resolution on the differing models.
 
 PHYSICAL SETUP
     List of pinouts between the ADC and the Raspberry Pi.
