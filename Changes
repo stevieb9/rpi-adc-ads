@@ -1,6 +1,6 @@
 Revision history for Perl extension RPi::ADC::ADS
 
-0.03 NOREL
+0.03    2017-01-08
         - remove comments from C code
         - layout/cleanup of XS code
         - lowercase vars in XS
@@ -8,6 +8,8 @@ Revision history for Perl extension RPi::ADC::ADS
         - C fetch() now accessible to library only
         - added config register details in POD
         - renamed distribution from RPi::ADS1x15
+        - added raw(), percent() and volts()
+        - we now properly bit-shift when we're on 16-bit resolution ADC models
 
 0.02    2017-01-07
         - POD additions/cleanup
