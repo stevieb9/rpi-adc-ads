@@ -103,9 +103,9 @@ sub _bytes {
 }
 sub _register_default {
     my $self = shift;
-    my $bit_9_15 = '11000011'; # 0xC3
+    my $bit_8_15 = '11000011'; # 0xC3
     my $bit_7_0  = '00000011'; # 0x03
-    $self->register($bit_9_15 . $bit_7_0);
+    $self->register($bit_8_15 . $bit_7_0);
 }
 sub _resolution {
     my ($self, $model) = @_;
@@ -134,7 +134,9 @@ sub volts {
     my $dev = $self->device;
     my @write_buf = $self->_bytes;
 
-    return voltage($addr, $dev, $write_buf[1], $write_buf[0], $self->_resolution);
+    return voltage(
+        $addr, $dev, $write_buf[0], $write_buf[1], $self->_resolution
+    );
 }
 sub raw {
     my ($self, $channel) = @_;
@@ -147,7 +149,7 @@ sub raw {
     my $dev = $self->device;
     my @write_buf = $self->_bytes;
 
-    return raw_c($addr, $dev, $write_buf[1], $write_buf[0], $self->_resolution);
+    return raw_c($addr, $dev, $write_buf[0], $write_buf[1], $self->_resolution);
 }
 sub percent {
     my ($self, $channel) = @_;
@@ -161,7 +163,7 @@ sub percent {
     my @write_buf = $self->_bytes;
 
     my $percent = percent_c(
-        $addr, $dev, $write_buf[1], $write_buf[0], $self->_resolution
+        $addr, $dev, $write_buf[0], $write_buf[1], $self->_resolution
     );
 
     return sprintf("%.2f", $percent);

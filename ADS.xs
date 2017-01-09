@@ -14,7 +14,7 @@
 #define BIT_MAX_12 1649
 #define BIT_MAX_16 26400
 
-int fetch(int ads_address, const char * dev_name, char * wbuf2, char * wbuf1, int resolution){
+int fetch(int ads_address, const char * dev_name, char * wbuf1, char * wbuf2, int resolution){
     
     uint8_t write_buf[3];
     uint8_t read_buf[2];
@@ -35,13 +35,21 @@ int fetch(int ads_address, const char * dev_name, char * wbuf2, char * wbuf1, in
     write_buf[1] = strtol(wbuf1, NULL, 0);
     write_buf[2] = strtol(wbuf2, NULL, 0);
 
-    read_buf[0]= 0;        
+    /*
+        printf("1: %d\n", write_buf[1]);
+        printf("2: %d\n", write_buf[2]);
+    */
+
+    read_buf[0]= 0;
     read_buf[1]= 0;
     
     if (write(i2c_file, write_buf, 3) != 3){
         perror("failed to write to the i2c bus");
         exit(1);
     }
+
+    // AND with 10000000 to get the 15th bit...
+    // this bit stores the "conversion complete" indicator
 
     while ((read_buf[0] & 0x80) == 0){
         read(i2c_file, read_buf, 2);
@@ -63,9 +71,9 @@ int fetch(int ads_address, const char * dev_name, char * wbuf2, char * wbuf1, in
     return conversion;
 }
 
-float voltage (int ads_address, const char * dev_name, char * wbuf2, char * wbuf1, int resolution){
+float voltage (int ads_address, const char * dev_name, char * wbuf1, char * wbuf2, int resolution){
    
-    int conversion = fetch(ads_address, dev_name, wbuf2, wbuf1, resolution);
+    int conversion = fetch(ads_address, dev_name, wbuf1, wbuf2, resolution);
     
     float volts;
      
@@ -79,16 +87,16 @@ float voltage (int ads_address, const char * dev_name, char * wbuf2, char * wbuf
     return volts;
 }
 
-int raw_c (int ads_address, const char * dev_name, char * wbuf2, char * wbuf1, int resolution){
+int raw_c (int ads_address, const char * dev_name, char * wbuf1, char * wbuf2, int resolution){
    
-    int conversion = fetch(ads_address, dev_name, wbuf2, wbuf1, resolution);
+    int conversion = fetch(ads_address, dev_name, wbuf1, wbuf2, resolution);
 
     return conversion;
 }
 
-float percent_c (int ads_address, const char * dev_name, char * wbuf2, char * wbuf1, int resolution){
+float percent_c (int ads_address, const char * dev_name, char * wbuf1, char * wbuf2, int resolution){
 
-    int conversion = fetch(ads_address, dev_name, wbuf2, wbuf1, resolution);
+    int conversion = fetch(ads_address, dev_name, wbuf1, wbuf2, resolution);
 
     float percent;
 
@@ -107,33 +115,33 @@ MODULE = RPi::ADC::ADS  PACKAGE = RPi::ADC::ADS
 PROTOTYPES: DISABLE
 
 int
-fetch (ads_address, dev_name, wbuf2, wbuf1, resolution)
+fetch (ads_address, dev_name, wbuf1, wbuf2, resolution)
     int	ads_address
     const char * dev_name
-    char * wbuf2
     char * wbuf1
+    char * wbuf2
     int resolution
 
 float
-voltage (ads_address, dev_name, wbuf2, wbuf1, resolution)
+voltage_c (ads_address, dev_name, wbuf1, wbuf2, resolution)
     int	ads_address
     const char * dev_name
-    char * wbuf2
     char * wbuf1
+    char * wbuf2
     int resolution
 
 int
-raw_c (ads_address, dev_name, wbuf2, wbuf1, resolution)
+raw_c (ads_address, dev_name, wbuf1, wbuf2, resolution)
     int	ads_address
     const char * dev_name
-    char * wbuf2
     char * wbuf1
+    char * wbuf2
     int resolution
 
 float
-percent_c (ads_address, dev_name, wbuf2, wbuf1, resolution)
+percent_c (ads_address, dev_name, wbuf1, wbuf2, resolution)
     int	ads_address
     const char * dev_name
-    char * wbuf2
     char * wbuf1
+    char * wbuf2
     int resolution
