@@ -225,10 +225,6 @@ __END__
 RPi::ADC::ADS - Interface to ADS 1xxx series analog to digital converters (ADC)
 on Raspberry Pi
 
-=for html
-<a href="http://travis-ci.org/stevieb9/rpi-adc-ads"><img src="https://secure.travis-ci.org/stevieb9/rpi-adc-ads.png"/>
-<a href='https://coveralls.io/github/stevieb9/rpi-adc-ads?branch=master'><img src='https://coveralls.io/repos/stevieb9/rpi-adc-ads/badge.svg?branch=master&service=github' alt='Coverage Status' /></a>
-
 =head1 SYNOPSIS
 
     use RPi::ADC::ADS;
@@ -239,7 +235,7 @@ on Raspberry Pi
     my $adc = RPi::ADC::ADS->new(
         model   => 'ADS1015',
         addr    => 0x48,
-        dev     => '/dev/i2c-1',
+        device  => '/dev/i2c-1',
         channel => 0,
     );
 
@@ -409,7 +405,7 @@ Retrieves the raw value of the ADC channel's input value.
 
 Parameters: See C<$channel> in L</volts>.
 
-=head2 C FUNCTIONS
+=head1 C FUNCTIONS
 
 The following C functions aren't meant to be called directly. Rather, use the
 corresponding Perl object methods instead.
