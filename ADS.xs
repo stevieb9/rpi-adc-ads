@@ -71,7 +71,7 @@ int fetch(int ads_address, const char * dev_name, char * wbuf1, char * wbuf2, in
     return conversion;
 }
 
-float voltage (int ads_address, const char * dev_name, char * wbuf1, char * wbuf2, int resolution){
+float voltage_c (int ads_address, const char * dev_name, char * wbuf1, char * wbuf2, int resolution){
    
     int conversion = fetch(ads_address, dev_name, wbuf1, wbuf2, resolution);
     

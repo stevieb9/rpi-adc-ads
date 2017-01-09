@@ -39,33 +39,68 @@ sub new {
 }
 sub addr {
     my ($self, $addr) = @_;
-    $self->{adc_addr} = $addr if defined $addr;
-    return defined $self->{adc_addr} ? $self->{adc_addr} : 0x48;
+
+    if (defined $addr){
+        if (! grep {$addr eq $_} qw(72 73 74 75)){
+            die "invalid address. " .
+                "Use 0x48 (72), 0x49 (73), 0x4A (74) or 0x4B (75)\n";
+        }
+        $self->{addr} = $addr;
+    }
+
+    $self->{addr} = 0x48 if ! defined $self->{addr};
+
+    return $self->{addr};
 }
 sub channel {
     my ($self, $chan) = @_;
 
-    $chan = defined $chan ? $chan : '0';
-
     if (defined $chan){
+        if ($chan !~ /\d/ || ! grep {$chan == $_} qw(0 1 2 3)){
+            die "invalid channel specification: $chan. " .
+                "use 0, 1, 2 or 3\n";
+        }
+
+        $self->{channel} = $chan;
+
         my $bin = $mux{$chan};
         my $reg = $self->register;
-        
+
         substr $reg, 1, 3, $bin;
         $self->register($reg);
     }
 
+    $self->{channel} = 0 if ! defined $self->{channel};
+
+    return $self->{channel};
 }
 sub device {
     my ($self, $dev) = @_;
-    $self->{device} = $dev if defined $dev;
-    return defined $self->{device} ? $self->{device} : '/dev/i2c-1'; 
+
+    if (defined $dev){
+        if ($dev !~ m|/dev/i2c-\d|){
+            die "invalid device name: $dev. " .
+                "Must be /dev/i2c-N, where N is 0-9\n";
+        }
+        $self->{device} = $dev;
+    }
+
+    $self->{device} = '/dev/i2c-1' if ! defined $self->{device};
+
+    return $self->{device};
 }
 sub model {
     my ($self, $model) = @_;
-    $self->{model} = $model if defined $model;
-    
-    $self->{model} = defined $self->{model} ? $self->{model} : 'ADS1015';
+
+    if (defined $model){
+        if ($model !~ /^ADS1[01]1[3458]/){
+            die "invalid model name: $model. " .
+                "Must be 'ADS1x1y' where x is 1 or 0, and y is 3, 4, 5 or 8\n";
+        }
+        $self->{model} = $model
+    }
+
+    $self->{model} = 'ADS1015' if ! defined $self->{model};
 
     my ($model_num) = $self->{model} =~ /(\d+)/;
 
@@ -101,6 +136,10 @@ sub _bytes {
 
     return @hex;
 }
+sub _mux {
+    # for testing purposes
+    return %mux;
+}
 sub _register_default {
     my $self = shift;
     my $bit_8_15 = '11000011'; # 0xC3
@@ -134,7 +173,7 @@ sub volts {
     my $dev = $self->device;
     my @write_buf = $self->_bytes;
 
-    return voltage(
+    return voltage_c(
         $addr, $dev, $write_buf[0], $write_buf[1], $self->_resolution
     );
 }
@@ -180,6 +219,10 @@ __END__
 RPi::ADC::ADS - Interface to ADS 1xxx series analog to digital converters (ADC)
 on Raspberry Pi
 
+=for html
+<a href="http://travis-ci.org/stevieb9/rpi-adc-ads"><img src="https://secure.travis-ci.org/stevieb9/rpi-adc-ads.png"/>
+<a href='https://coveralls.io/github/stevieb9/rpi-adc-ads?branch=master'><img src='https://coveralls.io/repos/stevieb9/rpi-adc-ads/badge.svg?branch=master&service=github' alt='Coverage Status' /></a>
+
 =head1 SYNOPSIS
 
     use RPi::ADC::ADS;
@@ -194,22 +237,16 @@ on Raspberry Pi
         channel => 0,
     );
 
-    # input voltage (relative to 3.3v)
-
-    my $volts = $apc->volts;
-
-    # percent of input capacity
+    my $volts   = $apc->volts;
 
     my $percent = $apc->percent;
 
-    # raw input value 
-
-    my $integer = $apc->raw;
+    my $int     = $apc->raw;
 
 =head1 DESCRIPTION
 
-Perl interface to the Adafruit ADS 1xxx series Analog to Digital Converters
-(ADC) on the Raspberry Pi.
+Perl interface to the Texas Instruments/Adafruit ADS 1xxx series Analog to
+Digital Converters (ADC) on the Raspberry Pi.
 
 Provides access via the i2c bus to all four input channels on each ADC, while
 performing correct bit-shifting between the 12-bit and 16-bit resolution on
@@ -217,13 +254,13 @@ the differing models.
 
 =head1 PHYSICAL SETUP
 
-List of pinouts between the ADC and the Raspberry Pi.
+List of pinout connections between the ADC and the Raspberry Pi.
 
     ADC     Pi
     -----------
     VDD     Vcc
     GND     Gnd
-    SCL     SCL (NOT SCLK)
+    SCL     SCL
     SDA     SDA
     ADDR    Gnd (see below for more info)
     ALRT    NC  (no connect)
@@ -243,7 +280,7 @@ C<Gnd> on the Raspberry Pi. Here are the addresses for the four Pi pins:
     SDA     0x4A
     SCL     0x4B
 
-=head1 METHODS
+=head1 OBJECT METHODS
 
 =head2 new
 
@@ -272,6 +309,73 @@ Optional. The filesystem path to the i2c device file. Defaults to C</dev/i2c-1>
 Optional. One of C<0> through C<A3> which specifies which channel to read. If
 not sent in, we default to C<0> throughout the object's lifecycle.
 
+=head2 addr($hex)
+
+Sets/gets the ADC memory address. After object instantiation, this method
+should only be used to get (ie. don't send in any parameters.
+
+Parameters:
+
+    $hex
+
+Optional: A memory address in the form C<0xNN>. See L</PHYSICAL SETUP> for full
+details.
+
+=head2 channel($channel)
+
+Sets/gets the currently registered ADC input channel within the object.
+
+Parameters:
+
+    $channel
+
+Optional: String, C<0> through C<3>, representing the ADC's multiplexer
+input channel to read from. Setting through this method overrides the value that
+was set in C<new()> (C<0> by default if never specified), until it is changed
+again. If you are using more than one channel, it's more useful to set the
+channel in your read calls (C<volts()>, C<raw()> and C<percent()>).
+
+=head2 device($dev)
+
+Sets/gets the file path information for the i2c device. This shouldn't be used
+as a setter after object instantiation. It defaults to C</dev/i2c-1> if not set
+in the C<new()> call (or with this method thereafter).
+
+Parameters:
+
+    $dev
+
+Optional: String, the full path of the i2c device in use. Defaults to
+C</dev/i2c-1>.
+
+=head2 model($model)
+
+Sets/gets the model of the ADC chip that we're connected to. This shouldn't be
+set after object instantiation. Defaults to C<ADS1015> if not set in the
+C<new()> call, or later with this method.
+
+Parameters:
+
+    $model
+
+Optional: String, the model name of the ADC unit. Defaults to C<ADS1015>. Valid
+values are C</ADS1[01]1[3458]/>.
+
+=head2 register($binary)
+
+Sets/gets the ADC's registers. This has been left public for convenience for
+those who understand the hardware very well. It really shouldn't be used
+otherwise.
+
+Parameters:
+
+    $binary
+
+Optional: A binary string (literal 1s and 0s), 32 bits long that represents the
+data we'll write to the ADC device.
+
+=head1 DATA RETRIEVAL METHODS
+
 =head2 volts($channel)
 
 Retrieves the voltage level of the channel.
@@ -299,44 +403,76 @@ Retrieves the raw value of the ADC channel's input value.
 
 Parameters: See C<$channel> in L</volts>.
 
-=head2 addr($hex)
+=head2 C FUNCTIONS
 
-Sets/gets the ADC memory address. After object instantiation, this method
-should only be used to get (ie. don't send in any parameters.
+The following C functions aren't meant to be called directly. Rather, use the
+corresponding Perl object methods instead.
 
-Parameters:
+=head2 fetch
 
-    $hex
+Fetches the raw data from the channel specified.
 
-Optional: A memory address in the form C<0xNN>. See L</PHYSICAL SETUP> for full
-details.
+Implemented as:
 
-=head2 channel($channel)
+    int
+    fetch (ads_address, dev_name, wbuf1, wbuf2, resolution)
+        int	ads_address
+        const char * dev_name
+        char * wbuf1
+        char * wbuf2
+        int resolution
 
-Sets/gets the currently registered ADC input channel within the object.
+C<wbuf1> is the most significant byte (bits 15-8)for the configuration register,
+C<wbuf2> being the least significant byte (bits 7-0).
 
-Parameters:
+=head2 voltage_c
 
-    $channel
+Fetches the ADC input and returns it as the actual voltage.
 
-Optional: String, C<0> through C<3>, representing the ADC's multiplexer
-input channel to read from. Setting through this method overrides the value that
-was set in C<new()> (C<0> by default if never specified), until it is changed
-again. If you are using more than one channel, it's more useful to set the
-channel in your read calls (C<volts()>, C<raw()> and C<percent()>).
+Implemented as:
 
-=head2 register($binary)
+    float
+    voltage_c (ads_address, dev_name, wbuf1, wbuf2, resolution)
+        int	ads_address
+        const char * dev_name
+        char * wbuf1
+        char * wbuf2
+        int resolution
 
-Sets/gets the ADC's registers. This has been left public for convenience for
-those who understand the hardware very well. It really shouldn't be used
-otherwise.
+See L</fetch> for details on the C<wbuf> arguments.
 
-Parameters:
+=head2 raw_c
 
-    $binary
+Fetches the ADC input and returns it in its raw form.
 
-Optional: A binary string (literal 1s and 0s), 32 bits long that represents the
-data we'll write to the ADC device.
+Implemented as:
+
+    int
+    raw_c (ads_address, dev_name, wbuf1, wbuf2, resolution)
+        int	ads_address
+        const char * dev_name
+        char * wbuf1
+        char * wbuf2
+        int resolution
+
+See L</fetch> for details on the C<wbuf> arguments.
+
+=head2 percent_c
+
+Fetches the ADC input value as a floating point percentage between minimum and
+maximum input values.
+
+Implemented as:
+
+    float
+    percent_c (ads_address, dev_name, wbuf1, wbuf2, resolution)
+        int	ads_address
+        const char * dev_name
+        char * wbuf1
+        char * wbuf2
+        int resolution
+
+See L</fetch> for details on the C<wbuf> arguments.
 
 =head1 TECHNICAL DATA
 

@@ -5,6 +5,12 @@ Revision history for Perl extension RPi::ADC::ADS
         - cleaned up parameter listing in pod (removed =head3 tags)
         - added clarifications in POD
         - added optional parameters and defaults in SYNOPSIS
+        - added parameter checking in all methods
+        - added tests for all functionality
+        - reworked the write_buf parameter to accept the two elements in proper
+          order, and modified calls that send them in
+        - added POD for missing methods and the C functions
+        - added Travis-CI and Coveralls.io integration
 
 0.03    2017-01-08
         - remove comments from C code
