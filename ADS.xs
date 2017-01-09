@@ -31,14 +31,9 @@ int fetch(int ads_address, const char * dev_name, char * wbuf1, char * wbuf2, in
         exit(1);
     }
 
-    write_buf[0] = 1;
+    write_buf[0] = 1; // set pointer to config register
     write_buf[1] = strtol(wbuf1, NULL, 0);
     write_buf[2] = strtol(wbuf2, NULL, 0);
-
-    /*
-        printf("1: %d\n", write_buf[1]);
-        printf("2: %d\n", write_buf[2]);
-    */
 
     read_buf[0]= 0;
     read_buf[1]= 0;
@@ -48,21 +43,24 @@ int fetch(int ads_address, const char * dev_name, char * wbuf1, char * wbuf2, in
         exit(1);
     }
 
-    // AND with 10000000 to get the 15th bit...
-    // this bit stores the "conversion complete" indicator
+    // AND with 10000000 and wait for bit 15 of the config register to go true
+    // This bit stores the "conversion complete" indicator
 
     while ((read_buf[0] & 0x80) == 0){
         read(i2c_file, read_buf, 2);
     }
 
-    write_buf[0] = 0;
+    write_buf[0] = 0; // set to conversion register
     write(i2c_file, write_buf, 1);
 
     read(i2c_file, read_buf, 2);
 
+    // shift left a full byte and merge (OR) the two bytes together
+
     int16_t conversion = read_buf[0] << 8 | read_buf[1];
 
     if (resolution == 12){
+        // shift right by four bits
         conversion = conversion >> 4;
     }
    

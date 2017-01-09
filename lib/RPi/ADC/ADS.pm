@@ -239,14 +239,14 @@ on Raspberry Pi
         channel => 0,
     );
 
-    my $volts   = $apc->volts;
-    my $percent = $apc->percent;
-    my $int     = $apc->raw;
+    my $volts   = $adc->volts;
+    my $percent = $adc->percent;
+    my $int     = $adc->raw;
 
     # all retrieval methods allow you to specify the channel (0..3) in the call
     # instead of using the default, or the one set in new()
 
-    my $percent = $apc->percent(3);
+    my $percent = $adc->percent(3);
     ...
 
 =head1 DESCRIPTION
