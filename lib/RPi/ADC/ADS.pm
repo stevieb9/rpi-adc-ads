@@ -8,20 +8,17 @@ our $VERSION = '0.06';
 require XSLoader;
 XSLoader::load('RPi::ADC::ADS', $VERSION);
 
+#FIXME: rearrange default msb settings in channel()
+# currently we have it hard-set to 131
+
 # channel multiplexer binary representations
-#my %mux = (
-    # bits 7-5 are relevant
-#    0 => 64,  # 100, 01000000, 0x40
-#    1 => 80,  # 101, 01010000, 0x50
-#    2 => 96,  # 110, 01100000, 0x60
-#    3 => 112, # 111, 01110000, 0x70
-#);
 
 my %mux = (
-    0 => '100',
-    1 => '101',
-    2 => '110',
-    3 => '111',
+    # bits 7-5 are relevant
+    0 => 64,  # 100, 01000000, 0x40
+    1 => 80,  # 101, 01010000, 0x50
+    2 => 96,  # 110, 01100000, 0x60
+    3 => 112, # 111, 01110000, 0x70
 );
 
 # object methods (public)
@@ -73,11 +70,10 @@ sub channel {
 
         $self->{channel} = $chan;
 
-        my $bin = $mux{$chan};
-        my $reg = $self->register;
+        my ($msb, $lsb) = $self->register;
+        $msb = 131 | $mux{$chan};
 
-        substr $reg, 1, 3, $bin;
-        $self->register($reg);
+        $self->register($msb, $lsb);
     }
 
     $self->{channel} = 0 if ! defined $self->{channel};
@@ -119,35 +115,55 @@ sub model {
     return $self->{model};
 }
 sub register {
-    my ($self, $bin) = @_;
-    if (defined $bin){
-        $self->{register_data} = $bin;
+    my ($self, $msb, $lsb) = @_;
+
+    # config register
+
+    if (defined $msb){
+        if (! defined $lsb){
+            die "register() requires \$msb and \$lsb params\n";
+        }
+        if (! grep {$msb == $_} (0..255)){
+            die "msg param requires an int 0..255\n";
+        }
+        if (! grep {$lsb == $_} (0..255)){
+            die "lsb param requires an int 0..255\n";
+        }
+
+        $self->{register_data} = [$msb, $lsb];
     }
-    return $self->{register_data};
+    return @{ $self->{register_data} };
 }
 
 # object methods (private)
 
-sub _bytes {
-    my ($self, $binstr) = @_;
+sub _lsb {
+    # least significant byte of config register
 
-    my @bytes;
+    my ($self, $lsb) = @_;
 
-    if (defined $binstr){
-        @bytes = ($binstr =~ m/.{8}/g);
+    if (defined $lsb){
+        if (! grep {$lsb == $_} (0..255)){
+            die "_lsb() requires an int 0..255\n";
+        }
+        my $msb = $self->register->[0];
+        $self->register($msb, $lsb);
     }
-    else {
-        my $reg = $self->register;
-        @bytes = ($reg =~ m/.{8}/g);
-    }
+    return $self->register->[1];
+}
+sub _msb {
+    # most significant byte of config register
 
-    my @hex;
-    
-    for (@bytes){
-        push @hex, sprintf("%#x", oct("0b$_"));
-    }
+    my ($self, $msb) = @_;
 
-    return @hex;
+    if (defined $msb){
+        if (! grep {$msb == $_} (0..255)){
+            die "_msb() requires an int 0..255\n";
+        }
+        my $lsb = $self->register->[1];
+        $self->register($msb, $lsb);
+    }
+    return $self->register->[0];
 }
 sub _mux {
     # for testing purposes
@@ -155,9 +171,13 @@ sub _mux {
 }
 sub _register_default {
     my $self = shift;
-    my $bit_8_15 = '11000011'; # 0xC3
-    my $bit_7_0  = '00000011'; # 0x03
-    $self->register($bit_8_15 . $bit_7_0);
+
+    # config register
+
+    my $msb = 195;  # 11000011, 0xC3
+    my $lsb = 3;    # 00000011, 0x03
+
+    $self->register($msb, $lsb);
 }
 sub _resolution {
     my ($self, $model) = @_;
@@ -184,7 +204,7 @@ sub volts {
 
     my $addr = $self->addr;
     my $dev = $self->device;
-    my @write_buf = $self->_bytes;
+    my @write_buf = $self->register;
 
     return voltage_c(
         $addr, $dev, $write_buf[0], $write_buf[1], $self->_resolution
@@ -199,7 +219,7 @@ sub raw {
 
     my $addr = $self->addr;
     my $dev = $self->device;
-    my @write_buf = $self->_bytes;
+    my @write_buf = $self->register;
 
     return raw_c($addr, $dev, $write_buf[0], $write_buf[1], $self->_resolution);
 }
@@ -212,12 +232,14 @@ sub percent {
 
     my $addr = $self->addr;
     my $dev = $self->device;
-    my @write_buf = $self->_bytes;
+    my @write_buf = $self->register;
 
     my $percent = percent_c(
         $addr, $dev, $write_buf[0], $write_buf[1], $self->_resolution
     );
 
+    $percent = 100 if $percent > 100;
+    
     return sprintf("%.2f", $percent);
 }
 
@@ -376,16 +398,21 @@ values are C</ADS1[01]1[3458]/>.
 
 =head2 register
 
-Sets/gets the ADC's registers. This has been left public for convenience for
-those who understand the hardware very well. It really shouldn't be used
+Sets/gets the ADC's config register. This has been left public for convenience
+for those who understand the hardware very well. It really shouldn't be used
 otherwise.
 
 Parameters:
+    
+    $msb, $lsb
 
-    $binary
+Optional: If one is sent in, both must be sent in. C<$msb> is the most
+significant byte of the config register, an integer between 0-255. C<$lsb> is
+the least significant byte of the config register, and must be in the same
+format as the C<$msb>.
 
-Optional: A binary string (literal 1s and 0s), 32 bits long that represents the
-data we'll write to the ADC device.
+Return: Array with two elements. First element is the MSB, and the second
+element is the LSB.
 
 =head1 DATA RETRIEVAL METHODS
 

@@ -11,10 +11,10 @@ my $mod = 'RPi::ADC::ADS';
     my $obj = $mod->new;
     my %mux = $obj->_mux;
 
-    is $mux{0}, '100', "chan 0 has ok binary";
-    is $mux{1}, '101', "chan 1 has ok binary";
-    is $mux{2}, '110', "chan 2 has ok binary";
-    is $mux{3}, '111', "chan 3 has ok binary";
+    is $mux{0}, 64,  "chan 0 has ok binary";
+    is $mux{1}, 80,  "chan 1 has ok binary";
+    is $mux{2}, 96,  "chan 2 has ok binary";
+    is $mux{3}, 112, "chan 3 has ok binary";
 }
 
 done_testing();

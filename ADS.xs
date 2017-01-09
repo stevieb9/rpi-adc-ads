@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 
-#define BIT_MAX_12 1649
+#define BIT_MAX_12 1650
 #define BIT_MAX_16 26400
 
 int fetch(int addr, char * dev, char * wbuf1, char * wbuf2, int res){

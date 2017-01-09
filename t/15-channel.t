@@ -17,22 +17,24 @@ my $mod = 'RPi::ADC::ADS';
 
     my $obj = $mod->new;
 
-    my %register = (
+    my %mux = $obj->_mux;
+
+    my %r = (
         0 => [
-                '1100001100000011',
-                '100',
+                195,
+                198,
             ],
         1 => [
-                '1101001100000011',
-                '101',
+                211,
+                214,
             ],
         2 => [
-                '1110001100000011',
-                '110',
+                227,
+                230,
             ],
         3 => [
-                '1111001100000011',
-                '111',
+                243,
+                246,
             ],
     );
 
@@ -42,14 +44,16 @@ my $mod = 'RPi::ADC::ADS';
 
         # register
 
-        is $obj->register, $register{$_}->[0], "$_ binary register ok";
+        my ($msb, $lsb) = $obj->register;
 
-        # bits 14-12
+        is $msb, $r{$_}->[0], "msb ok for channel $_";
+        is $msb + $lsb, $r{$_}->[1], "total bits ok for channel $_";        
 
-        my $bits = substr $obj->register, 1, 3;
-        is $bits, $register{$_}->[1], "$_ sets register bits 14-12 ok";
+        is $r{$_}->[0] & $mux{$_}, $mux{$_}, "channel $_ has ok bit value total after bitwise AND";
     }
 }
+done_testing();
+exit;
 
 { # faulty channels
 

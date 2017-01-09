@@ -15,7 +15,10 @@ my $mod = 'RPi::ADC::ADS';
     is $obj->{device}, '/dev/i2c-1', "default dev is ok";
     is $obj->{channel}, 0, "default channel is ok";
 
-    is $obj->register, '1100001100000011', "default register ok";
+    my @reg = $obj->register;
+    is @reg, 2, "default register has proper elem count";
+    is $reg[0], 195, "default register MSB ok";
+    is $reg[1], 3, "default register LSB ok";
 }
 
 { # set params
