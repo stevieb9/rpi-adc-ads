@@ -1,6 +1,6 @@
 Revision history for Perl extension RPi::ADC::ADS
 
-0.04 NOREL
+0.04    2017-01-09
         - POD fix
         - cleaned up parameter listing in pod (removed =head3 tags)
         - added clarifications in POD

@@ -8,13 +8,16 @@ our $VERSION = '0.04';
 require XSLoader;
 XSLoader::load('RPi::ADC::ADS', $VERSION);
 
+# channel multiplexer binary representations
+
 my %mux = (
-    # channels
     0 => '100',
     1 => '101',
     2 => '110',
     3 => '111',
 );
+
+# object methods (public)
 
 sub new {
     my ($class, %args) = @_;
@@ -115,6 +118,9 @@ sub register {
     }
     return $self->{register_data};
 }
+
+# object methods (private)
+
 sub _bytes {
     my ($self, $binstr) = @_;
 
