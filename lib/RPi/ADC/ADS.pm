@@ -312,13 +312,13 @@ Optional. The filesystem path to the i2c device file. Defaults to C</dev/i2c-1>
 
     channel => $int
 
-Optional. One of C<0> through C<A3> which specifies which channel to read. If
+Optional. One of C<0> through C<3> which specifies which channel to read. If
 not sent in, we default to C<0> throughout the object's lifecycle.
 
 =head2 addr
 
 Sets/gets the ADC memory address. After object instantiation, this method
-should only be used to get (ie. don't send in any parameters.
+should only be used to get (ie. don't send in any parameters).
 
 Parameters:
 
@@ -484,12 +484,15 @@ See L</fetch> for details on the C<wbuf> arguments.
 
 =head2 REGISTERS
 
-The write buffer consists of an array with three elements. Element C<0>
-selects the register to use. C<0> for the conversion register and C<1> for the
-configuration register.
+Both the conversion and configuration registers are 16-bits wide.
 
-Element C<1> is a byte long, and represents bits 15-8 of a register, while
-element C<2> represents bits 7-0.
+The write buffer consists of an array with three elements. Element C<0> is the
+register pointer, which allows you to select the register to use. Value C<0> for
+the conversion register and C<1> for the configuration register.
+
+Element C<1> is a byte long, and represents the most significant bits (15-8) of
+each 16-bit register, while element C<2> represents the least significant bits,
+7-0.
 
 =head2 CONFIG REGISTER
 
