@@ -14,7 +14,7 @@
 #define BIT_MAX_12 1649
 #define BIT_MAX_16 26400
 
-int fetch(int addr, const char * dev, char * wbuf1, char * wbuf2, int res){
+int fetch(int addr, char * dev, char * wbuf1, char * wbuf2, int res){
 
     uint8_t write_buf[3];
     uint8_t read_buf[2];
@@ -69,7 +69,7 @@ int fetch(int addr, const char * dev, char * wbuf1, char * wbuf2, int res){
     return conversion;
 }
 
-float voltage_c (int addr, const char * dev, char * wbuf1, char * wbuf2, int res){
+float voltage_c (int addr, char * dev, char * wbuf1, char * wbuf2, int res){
    
     int conversion = fetch(addr, dev, wbuf1, wbuf2, res);
     
@@ -85,14 +85,14 @@ float voltage_c (int addr, const char * dev, char * wbuf1, char * wbuf2, int res
     return volts;
 }
 
-int raw_c (int addr, const char * dev, char * wbuf1, char * wbuf2, int res){
+int raw_c (int addr, char * dev, char * wbuf1, char * wbuf2, int res){
    
     int conversion = fetch(addr, dev, wbuf1, wbuf2, res);
 
     return conversion;
 }
 
-float percent_c (int addr, const char * dev, char * wbuf1, char * wbuf2, int res){
+float percent_c (int addr, char * dev, char * wbuf1, char * wbuf2, int res){
 
     int conversion = fetch(addr, dev, wbuf1, wbuf2, res);
 
@@ -115,7 +115,7 @@ PROTOTYPES: DISABLE
 int
 fetch (addr, dev, wbuf1, wbuf2, res)
     int addr
-    const char * dev
+    char * dev
     char * wbuf1
     char * wbuf2
     int res
@@ -123,7 +123,7 @@ fetch (addr, dev, wbuf1, wbuf2, res)
 float
 voltage_c (addr, dev, wbuf1, wbuf2, res)
     int addr
-    const char * dev
+    char * dev
     char * wbuf1
     char * wbuf2
     int res
@@ -131,7 +131,7 @@ voltage_c (addr, dev, wbuf1, wbuf2, res)
 int
 raw_c (addr, dev, wbuf1, wbuf2, res)
     int addr
-    const char * dev
+    char * dev
     char * wbuf1
     char * wbuf2
     int res
@@ -139,7 +139,7 @@ raw_c (addr, dev, wbuf1, wbuf2, res)
 float
 percent_c (addr, dev, wbuf1, wbuf2, res)
     int addr
-    const char * dev
+    char * dev
     char * wbuf1
     char * wbuf2
     int res

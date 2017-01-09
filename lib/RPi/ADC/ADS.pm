@@ -430,7 +430,7 @@ Implemented as:
     int
     fetch (addr, dev, wbuf1, wbuf2, res)
         int	addr
-        const char * dev
+        char * dev
         char * wbuf1
         char * wbuf2
         int resolution
@@ -447,7 +447,7 @@ Implemented as:
     float
     voltage_c (addr, dev, wbuf1, wbuf2, res)
         int	addr
-        const char * dev
+        char * dev
         char * wbuf1
         char * wbuf2
         int resolution
@@ -463,7 +463,7 @@ Implemented as:
     int
     raw_c (addr, dev, wbuf1, wbuf2, res)
         int	addr
-        const char * dev
+        char * dev
         char * wbuf1
         char * wbuf2
         int resolution
@@ -480,7 +480,7 @@ Implemented as:
     float
     percent_c (addr, dev, wbuf1, wbuf2, res)
         int	addr
-        const char * dev
+        char * dev
         char * wbuf1
         char * wbuf2
         int resolution
