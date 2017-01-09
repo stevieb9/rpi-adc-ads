@@ -428,9 +428,9 @@ Fetches the raw data from the channel specified.
 Implemented as:
 
     int
-    fetch (ads_address, dev_name, wbuf1, wbuf2, resolution)
-        int	ads_address
-        const char * dev_name
+    fetch (addr, dev, wbuf1, wbuf2, res)
+        int	addr
+        const char * dev
         char * wbuf1
         char * wbuf2
         int resolution
@@ -445,9 +445,9 @@ Fetches the ADC input and returns it as the actual voltage.
 Implemented as:
 
     float
-    voltage_c (ads_address, dev_name, wbuf1, wbuf2, resolution)
-        int	ads_address
-        const char * dev_name
+    voltage_c (addr, dev, wbuf1, wbuf2, res)
+        int	addr
+        const char * dev
         char * wbuf1
         char * wbuf2
         int resolution
@@ -461,9 +461,9 @@ Fetches the ADC input and returns it in its raw form.
 Implemented as:
 
     int
-    raw_c (ads_address, dev_name, wbuf1, wbuf2, resolution)
-        int	ads_address
-        const char * dev_name
+    raw_c (addr, dev, wbuf1, wbuf2, res)
+        int	addr
+        const char * dev
         char * wbuf1
         char * wbuf2
         int resolution
@@ -478,9 +478,9 @@ maximum input values.
 Implemented as:
 
     float
-    percent_c (ads_address, dev_name, wbuf1, wbuf2, resolution)
-        int	ads_address
-        const char * dev_name
+    percent_c (addr, dev, wbuf1, wbuf2, res)
+        int	addr
+        const char * dev
         char * wbuf1
         char * wbuf2
         int resolution

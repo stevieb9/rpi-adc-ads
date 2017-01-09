@@ -14,19 +14,19 @@
 #define BIT_MAX_12 1649
 #define BIT_MAX_16 26400
 
-int fetch(int ads_address, const char * dev_name, char * wbuf1, char * wbuf2, int resolution){
-    
+int fetch(int addr, const char * dev, char * wbuf1, char * wbuf2, int res){
+
     uint8_t write_buf[3];
     uint8_t read_buf[2];
 
-    int i2c_file = open(dev_name, O_RDWR);
+    int i2c_file = open(dev, O_RDWR);
 
     if (i2c_file == -1){
-        perror(dev_name);
+        perror(dev);
         exit(1);
     }
     
-    if (ioctl(i2c_file, I2C_SLAVE, ads_address) < 0){
+    if (ioctl(i2c_file, I2C_SLAVE, addr) < 0){
         perror("failed to acquire bus access and/or talk to slave");
         exit(1);
     }
@@ -59,7 +59,7 @@ int fetch(int ads_address, const char * dev_name, char * wbuf1, char * wbuf2, in
 
     int16_t conversion = read_buf[0] << 8 | read_buf[1];
 
-    if (resolution == 12){
+    if (res == 12){
         // shift right by four bits
         conversion = conversion >> 4;
     }
@@ -69,13 +69,13 @@ int fetch(int ads_address, const char * dev_name, char * wbuf1, char * wbuf2, in
     return conversion;
 }
 
-float voltage_c (int ads_address, const char * dev_name, char * wbuf1, char * wbuf2, int resolution){
+float voltage_c (int addr, const char * dev, char * wbuf1, char * wbuf2, int res){
    
-    int conversion = fetch(ads_address, dev_name, wbuf1, wbuf2, resolution);
+    int conversion = fetch(addr, dev, wbuf1, wbuf2, res);
     
     float volts;
      
-    if (resolution == 12){
+    if (res == 12){
         volts = (float)conversion * 4.096 / 2048.0;
     }
     else {
@@ -85,20 +85,20 @@ float voltage_c (int ads_address, const char * dev_name, char * wbuf1, char * wb
     return volts;
 }
 
-int raw_c (int ads_address, const char * dev_name, char * wbuf1, char * wbuf2, int resolution){
+int raw_c (int addr, const char * dev, char * wbuf1, char * wbuf2, int res){
    
-    int conversion = fetch(ads_address, dev_name, wbuf1, wbuf2, resolution);
+    int conversion = fetch(addr, dev, wbuf1, wbuf2, res);
 
     return conversion;
 }
 
-float percent_c (int ads_address, const char * dev_name, char * wbuf1, char * wbuf2, int resolution){
+float percent_c (int addr, const char * dev, char * wbuf1, char * wbuf2, int res){
 
-    int conversion = fetch(ads_address, dev_name, wbuf1, wbuf2, resolution);
+    int conversion = fetch(addr, dev, wbuf1, wbuf2, res);
 
     float percent;
 
-    if (resolution == 12){
+    if (res == 12){
         percent = (float)conversion / BIT_MAX_12 * 100;
     }
     else {
@@ -113,33 +113,33 @@ MODULE = RPi::ADC::ADS  PACKAGE = RPi::ADC::ADS
 PROTOTYPES: DISABLE
 
 int
-fetch (ads_address, dev_name, wbuf1, wbuf2, resolution)
-    int ads_address
-    const char * dev_name
+fetch (addr, dev, wbuf1, wbuf2, res)
+    int addr
+    const char * dev
     char * wbuf1
     char * wbuf2
-    int resolution
+    int res
 
 float
-voltage_c (ads_address, dev_name, wbuf1, wbuf2, resolution)
-    int ads_address
-    const char * dev_name
+voltage_c (addr, dev, wbuf1, wbuf2, res)
+    int addr
+    const char * dev
     char * wbuf1
     char * wbuf2
-    int resolution
+    int res
 
 int
-raw_c (ads_address, dev_name, wbuf1, wbuf2, resolution)
-    int ads_address
-    const char * dev_name
+raw_c (addr, dev, wbuf1, wbuf2, res)
+    int addr
+    const char * dev
     char * wbuf1
     char * wbuf2
-    int resolution
+    int res
 
 float
-percent_c (ads_address, dev_name, wbuf1, wbuf2, resolution)
-    int ads_address
-    const char * dev_name
+percent_c (addr, dev, wbuf1, wbuf2, res)
+    int addr
+    const char * dev
     char * wbuf1
     char * wbuf2
-    int resolution
+    int res

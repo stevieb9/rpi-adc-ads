@@ -93,13 +93,13 @@ OBJECT METHODS
 
         channel => $int
 
-    Optional. One of 0 through A3 which specifies which channel to read. If
+    Optional. One of 0 through 3 which specifies which channel to read. If
     not sent in, we default to 0 throughout the object's lifecycle.
 
  addr
 
     Sets/gets the ADC memory address. After object instantiation, this
-    method should only be used to get (ie. don't send in any parameters.
+    method should only be used to get (ie. don't send in any parameters).
 
     Parameters:
 
@@ -203,9 +203,9 @@ C FUNCTIONS
     Implemented as:
 
         int
-        fetch (ads_address, dev_name, wbuf1, wbuf2, resolution)
-            int     ads_address
-            const char * dev_name
+        fetch (addr, dev, wbuf1, wbuf2, res)
+            int     addr
+            const char * dev
             char * wbuf1
             char * wbuf2
             int resolution
@@ -220,9 +220,9 @@ C FUNCTIONS
     Implemented as:
 
         float
-        voltage_c (ads_address, dev_name, wbuf1, wbuf2, resolution)
-            int     ads_address
-            const char * dev_name
+        voltage_c (addr, dev, wbuf1, wbuf2, res)
+            int     addr
+            const char * dev
             char * wbuf1
             char * wbuf2
             int resolution
@@ -236,9 +236,9 @@ C FUNCTIONS
     Implemented as:
 
         int
-        raw_c (ads_address, dev_name, wbuf1, wbuf2, resolution)
-            int     ads_address
-            const char * dev_name
+        raw_c (addr, dev, wbuf1, wbuf2, res)
+            int     addr
+            const char * dev
             char * wbuf1
             char * wbuf2
             int resolution
@@ -253,9 +253,9 @@ C FUNCTIONS
     Implemented as:
 
         float
-        percent_c (ads_address, dev_name, wbuf1, wbuf2, resolution)
-            int     ads_address
-            const char * dev_name
+        percent_c (addr, dev, wbuf1, wbuf2, res)
+            int     addr
+            const char * dev
             char * wbuf1
             char * wbuf2
             int resolution
@@ -266,12 +266,16 @@ TECHNICAL DATA
 
  REGISTERS
 
-    The write buffer consists of an array with three elements. Element 0
-    selects the register to use. 0 for the conversion register and 1 for
-    the configuration register.
+    Both the conversion and configuration registers are 16-bits wide.
 
-    Element 1 is a byte long, and represents bits 15-8 of a register, while
-    element 2 represents bits 7-0.
+    The write buffer consists of an array with three elements. Element 0 is
+    the register pointer, which allows you to select the register to use.
+    Value 0 for the conversion register and 1 for the configuration
+    register.
+
+    Element 1 is a byte long, and represents the most significant bits
+    (15-8) of each 16-bit register, while element 2 represents the least
+    significant bits, 7-0.
 
  CONFIG REGISTER
 
