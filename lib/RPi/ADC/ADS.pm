@@ -9,6 +9,13 @@ require XSLoader;
 XSLoader::load('RPi::ADC::ADS', $VERSION);
 
 # channel multiplexer binary representations
+#my %mux = (
+    # bits 7-5 are relevant
+#    0 => 64,  # 100, 01000000, 0x40
+#    1 => 80,  # 101, 01010000, 0x50
+#    2 => 96,  # 110, 01100000, 0x60
+#    3 => 112, # 111, 01110000, 0x70
+#);
 
 my %mux = (
     0 => '100',
