@@ -18,7 +18,7 @@ my %mux = (
 
 sub new {
     my ($class, %args) = @_;
-    # model
+    # model (done)
     # addr (done)
     # dev (done)
     # channel (done)
@@ -182,9 +182,17 @@ on Raspberry Pi
 
     use RPi::ADC::ADS;
 
-    my $adc = RPi::ADC::ADS->new;
+    # instantiation of the object, shown with optional parameters
+    # with their defaults if you don't specify them
 
-    # voltage level
+    my $adc = RPi::ADC::ADS->new(
+        model   => 'ADS1015',
+        addr    => 0x48,
+        dev     => '/dev/i2c-1',
+        channel => 0,
+    );
+
+    # input voltage (relative to 3.3v)
 
     my $volts = $apc->volts;
 
@@ -237,24 +245,27 @@ C<Gnd> on the Raspberry Pi. Here are the addresses for the four Pi pins:
 
 =head2 new
 
+Instantiates a new L<RPi::ADC::ADS> object. All parameters are optional, and are
+all sent in as a single hash.
+
 Parameters:
 
-=head3 model
+    model => $string
 
 Optional. The model number of the ADC. If not specified, we use C<ADS1015>.
 Models that start with C<ADS11> have 16-bit accuracy resolution, and models
 that start with C<ADS10> have 12-bit resolution.
 
-=head3 addr
+    addr => $hex
 
 Optional. The hex location of the ADC. If the pinout in L</PHYSICAL SETUP> is
 used, this will be C<0x48> (which is the default if not supplied).
 
-=head3 device
+    device => $string
 
 Optional. The filesystem path to the i2c device file. Defaults to C</dev/i2c-1>
 
-=head3 channel
+    channel => $int
 
 Optional. One of C<0> through C<A3> which specifies which channel to read. If
 not sent in, we default to C<0> throughout the object's lifecycle.
@@ -265,7 +276,7 @@ Retrieves the voltage level of the channel.
 
 Parameters:
 
-=head3 $channel
+    $channel
 
 Optional: String, C<0> through C<3>, representing the ADC input channel to
 read from. Setting this parameter allows you to read all four channels without
@@ -293,20 +304,24 @@ should only be used to get (ie. don't send in any parameters.
 
 Parameters:
 
-=head3 $hex 
+    $hex
 
-Optional: A memory address in the form C<0xNN>.
+Optional: A memory address in the form C<0xNN>. See L</PHYSICAL SETUP> for full
+details.
 
-=head2 channel($mux)
+=head2 channel($channel)
 
 Sets/gets the currently registered ADC input channel within the object.
 
 Parameters:
 
-=head3 $mux
+    $channel
 
 Optional: String, C<0> through C<3>, representing the ADC's multiplexer
-input channel to read from.
+input channel to read from. Setting through this method overrides the value that
+was set in C<new()> (C<0> by default if never specified), until it is changed
+again. If you are using more than one channel, it's more useful to set the
+channel in your read calls (C<volts()>, C<raw()> and C<percent()>).
 
 =head2 register($binary)
 
@@ -316,9 +331,10 @@ otherwise.
 
 Parameters:
 
-=head3 $binary
+    $binary
 
-Optional: A binary string (literal 1s and 0s), 32 bits long.
+Optional: A binary string (literal 1s and 0s), 32 bits long that represents the
+data we'll write to the ADC device.
 
 =head1 TECHNICAL DATA
 
@@ -351,12 +367,12 @@ Below is the binary representation for the input channels (bits 14-12):
     A3      111
 
 Bits 11-9 are for the programmable gain amplifier. This software uses C<001> or
-4.096V to cover the Pi's 3.3V output.
++/-4.096V to cover the Pi's 3.3V output.
 
-    000: FS = ±6.144V(1)           100: FS = ±0.512V
-    001: FS = ±4.096V(1)           101: FS = ±0.256V
-    010: FS = ±2.048V (hw default) 110: FS = ±0.256V
-    011: FS = ±2.024V              111: FS = ±0.256V
+    000: FS = +/-6.144V              100: FS = +/-0.512V
+    001: FS = +/-4.096V              101: FS = +/-0.256V
+    010: FS = +/-2.048V (hw default) 110: FS = +/-0.256V
+    011: FS = +/-2.024V              111: FS = +/-0.256V
 
 Bit 8 is for the conversion operation mode. We use single conversion hardware
 default.
@@ -387,8 +403,17 @@ Bits 1-0 represent the comparator queue. This software has disabled it:
     10 : Assert after four conversions
     11 : Disable comparator (default)
 
-See the L<https://cdn-shop.adafruit.com/datasheets/ads1015.pdf|datasheet> for
-further information.
+=head1 READING DATA
+
+Each channel has a conversion register (that contains the actual analog input).
+This register is 16 bits wide. With that said, the most significant bit is used
+to identify whether the number is positive or negative, so technically, for the
+ADC1xxx series ADCs, the width is actually 15 bits, and the ADC10xx units are
+11 bits wide (as the resolution on these models are only 12-bit as opposed to
+16-bit).
+
+See the L<ADC's datasheet|https://cdn-shop.adafruit.com/datasheets/ads1016.pdf>
+for further information.
 
 =head1 SEE ALSO
 
