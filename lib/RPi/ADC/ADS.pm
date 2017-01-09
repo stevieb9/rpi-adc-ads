@@ -240,10 +240,14 @@ on Raspberry Pi
     );
 
     my $volts   = $apc->volts;
-
     my $percent = $apc->percent;
-
     my $int     = $apc->raw;
+
+    # all retrieval methods allow you to specify the channel (0..3) in the call
+    # instead of using the default, or the one set in new()
+
+    my $percent = $apc->percent(3);
+    ...
 
 =head1 DESCRIPTION
 
@@ -311,7 +315,7 @@ Optional. The filesystem path to the i2c device file. Defaults to C</dev/i2c-1>
 Optional. One of C<0> through C<A3> which specifies which channel to read. If
 not sent in, we default to C<0> throughout the object's lifecycle.
 
-=head2 addr($hex)
+=head2 addr
 
 Sets/gets the ADC memory address. After object instantiation, this method
 should only be used to get (ie. don't send in any parameters.
@@ -323,7 +327,7 @@ Parameters:
 Optional: A memory address in the form C<0xNN>. See L</PHYSICAL SETUP> for full
 details.
 
-=head2 channel($channel)
+=head2 channel
 
 Sets/gets the currently registered ADC input channel within the object.
 
@@ -337,7 +341,7 @@ was set in C<new()> (C<0> by default if never specified), until it is changed
 again. If you are using more than one channel, it's more useful to set the
 channel in your read calls (C<volts()>, C<raw()> and C<percent()>).
 
-=head2 device($dev)
+=head2 device
 
 Sets/gets the file path information for the i2c device. This shouldn't be used
 as a setter after object instantiation. It defaults to C</dev/i2c-1> if not set
@@ -350,7 +354,7 @@ Parameters:
 Optional: String, the full path of the i2c device in use. Defaults to
 C</dev/i2c-1>.
 
-=head2 model($model)
+=head2 model
 
 Sets/gets the model of the ADC chip that we're connected to. This shouldn't be
 set after object instantiation. Defaults to C<ADS1015> if not set in the
@@ -363,7 +367,7 @@ Parameters:
 Optional: String, the model name of the ADC unit. Defaults to C<ADS1015>. Valid
 values are C</ADS1[01]1[3458]/>.
 
-=head2 register($binary)
+=head2 register
 
 Sets/gets the ADC's registers. This has been left public for convenience for
 those who understand the hardware very well. It really shouldn't be used
@@ -378,7 +382,7 @@ data we'll write to the ADC device.
 
 =head1 DATA RETRIEVAL METHODS
 
-=head2 volts($channel)
+=head2 volts
 
 Retrieves the voltage level of the channel.
 
@@ -393,13 +397,13 @@ changing the default set in the object.
 Return: A floating point number between C<0> and the maximum voltage output by
 the Pi's GPIO pins.
 
-=head2 percent($channel)
+=head2 percent
 
 Retrieves the ADC channel's input value by percentage of maximum input.
 
 Parameters: See C<$channel> in L</volts>.
 
-=head2 raw($channel)
+=head2 raw
 
 Retrieves the raw value of the ADC channel's input value.
 
@@ -424,8 +428,8 @@ Implemented as:
         char * wbuf2
         int resolution
 
-C<wbuf1> is the most significant byte (bits 15-8)for the configuration register,
-C<wbuf2> being the least significant byte (bits 7-0).
+C<wbuf1> is the most significant byte (bits 15-8) for the configuration
+register, C<wbuf2> being the least significant byte (bits 7-0).
 
 =head2 voltage_c
 

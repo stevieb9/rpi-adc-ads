@@ -18,10 +18,14 @@ SYNOPSIS
         );
     
         my $volts   = $apc->volts;
-    
         my $percent = $apc->percent;
-    
         my $int     = $apc->raw;
+    
+        # all retrieval methods allow you to specify the channel (0..3) in the call
+        # instead of using the default, or the one set in new()
+    
+        my $percent = $apc->percent(3);
+        ...
 
 DESCRIPTION
 
@@ -92,7 +96,7 @@ OBJECT METHODS
     Optional. One of 0 through A3 which specifies which channel to read. If
     not sent in, we default to 0 throughout the object's lifecycle.
 
- addr($hex)
+ addr
 
     Sets/gets the ADC memory address. After object instantiation, this
     method should only be used to get (ie. don't send in any parameters.
@@ -104,7 +108,7 @@ OBJECT METHODS
     Optional: A memory address in the form 0xNN. See "PHYSICAL SETUP" for
     full details.
 
- channel($channel)
+ channel
 
     Sets/gets the currently registered ADC input channel within the object.
 
@@ -118,7 +122,7 @@ OBJECT METHODS
     changed again. If you are using more than one channel, it's more useful
     to set the channel in your read calls (volts(), raw() and percent()).
 
- device($dev)
+ device
 
     Sets/gets the file path information for the i2c device. This shouldn't
     be used as a setter after object instantiation. It defaults to
@@ -132,7 +136,7 @@ OBJECT METHODS
     Optional: String, the full path of the i2c device in use. Defaults to
     /dev/i2c-1.
 
- model($model)
+ model
 
     Sets/gets the model of the ADC chip that we're connected to. This
     shouldn't be set after object instantiation. Defaults to ADS1015 if not
@@ -145,7 +149,7 @@ OBJECT METHODS
     Optional: String, the model name of the ADC unit. Defaults to ADS1015.
     Valid values are /ADS1[01]1[3458]/.
 
- register($binary)
+ register
 
     Sets/gets the ADC's registers. This has been left public for
     convenience for those who understand the hardware very well. It really
@@ -160,7 +164,7 @@ OBJECT METHODS
 
 DATA RETRIEVAL METHODS
 
- volts($channel)
+ volts
 
     Retrieves the voltage level of the channel.
 
@@ -175,13 +179,13 @@ DATA RETRIEVAL METHODS
     Return: A floating point number between 0 and the maximum voltage
     output by the Pi's GPIO pins.
 
- percent($channel)
+ percent
 
     Retrieves the ADC channel's input value by percentage of maximum input.
 
     Parameters: See $channel in "volts".
 
- raw($channel)
+ raw
 
     Retrieves the raw value of the ADC channel's input value.
 
@@ -206,7 +210,7 @@ C FUNCTIONS
             char * wbuf2
             int resolution
 
-    wbuf1 is the most significant byte (bits 15-8)for the configuration
+    wbuf1 is the most significant byte (bits 15-8) for the configuration
     register, wbuf2 being the least significant byte (bits 7-0).
 
  voltage_c

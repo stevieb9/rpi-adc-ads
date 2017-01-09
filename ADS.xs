@@ -116,7 +116,7 @@ PROTOTYPES: DISABLE
 
 int
 fetch (ads_address, dev_name, wbuf1, wbuf2, resolution)
-    int	ads_address
+    int ads_address
     const char * dev_name
     char * wbuf1
     char * wbuf2
@@ -124,7 +124,7 @@ fetch (ads_address, dev_name, wbuf1, wbuf2, resolution)
 
 float
 voltage_c (ads_address, dev_name, wbuf1, wbuf2, resolution)
-    int	ads_address
+    int ads_address
     const char * dev_name
     char * wbuf1
     char * wbuf2
@@ -132,7 +132,7 @@ voltage_c (ads_address, dev_name, wbuf1, wbuf2, resolution)
 
 int
 raw_c (ads_address, dev_name, wbuf1, wbuf2, resolution)
-    int	ads_address
+    int ads_address
     const char * dev_name
     char * wbuf1
     char * wbuf2
@@ -140,7 +140,7 @@ raw_c (ads_address, dev_name, wbuf1, wbuf2, resolution)
 
 float
 percent_c (ads_address, dev_name, wbuf1, wbuf2, resolution)
-    int	ads_address
+    int ads_address
     const char * dev_name
     char * wbuf1
     char * wbuf2

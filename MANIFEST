@@ -1,3 +1,4 @@
+.travis.yml.bad
 ADS.xs
 Changes
 lib/RPi/ADC/ADS.pm

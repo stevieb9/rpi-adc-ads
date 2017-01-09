@@ -1,5 +1,12 @@
 Revision history for Perl extension RPi::ADC::ADS
 
+0.05    2017-01-09
+        - major POD cleanup
+        - layout fixes in XS file
+        - removed parameters from pod method headings
+        - SYNOPSIS fixes
+        - typo fixes
+
 0.04    2017-01-09
         - POD fix
         - cleaned up parameter listing in pod (removed =head3 tags)
