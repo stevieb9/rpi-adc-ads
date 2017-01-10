@@ -46,6 +46,8 @@ my $mod = 'RPi::ADC::ADS';
 
         my ($msb, $lsb) = $obj->register;
 
+        printf("%x\n", $msb);;
+
         is $msb, $r{$_}->[0], "msb ok for channel $_";
         is $msb + $lsb, $r{$_}->[1], "total bits ok for channel $_";        
 

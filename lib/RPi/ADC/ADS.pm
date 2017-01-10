@@ -8,6 +8,8 @@ our $VERSION = '0.06';
 require XSLoader;
 XSLoader::load('RPi::ADC::ADS', $VERSION);
 
+use constant CONFREG_BASE => 128;
+
 #FIXME: rearrange default msb settings in channel()
 # currently we have it hard-set to 131
 
@@ -32,15 +34,22 @@ sub new {
     # mode
     # rate 
     # polarity
+    # queue
 
     my $self = bless {}, $class;
 
     $self->_register_default;
 
+    # primary C args
+
     $self->model($args{model});
     $self->addr($args{addr});
     $self->device($args{device});
+
+    # control register MSB switches
+
     $self->channel($args{channel});
+    $self->queue($args{queue});
 
     return $self;
 }
@@ -71,7 +80,7 @@ sub channel {
         $self->{channel} = $chan;
 
         my ($msb, $lsb) = $self->register;
-        $msb = 131 | $mux{$chan};
+        $msb = $msb | $mux{$chan};
 
         $self->register($msb, $lsb);
     }
@@ -133,6 +142,26 @@ sub register {
         $self->{register_data} = [$msb, $lsb];
     }
     return @{ $self->{register_data} };
+}
+sub queue {
+    my ($self, $q) = @_;
+
+    # config register
+
+    if (defined $q){
+        if (! grep {$q == $_} (0..3)){
+            die "queue param requires an int 0..3\n";
+        }
+
+        $self->{queue} = $q;
+    }
+
+    $self->{queue} = 3 if ! defined $self->{queue};
+
+    my ($msb, $lsb) = $self->register;
+    $msb = $msb | $self->{queue};
+
+    return $self->{queue};
 }
 
 # object methods (private)
