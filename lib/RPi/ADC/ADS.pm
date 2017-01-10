@@ -41,14 +41,21 @@ my %mux = (
     '101' => 0x5000, # 01010000, 20480
     '110' => 0x6000, # 01100000, 24576
     '111' => 0x7000, # 01110000, 28672
+
+    0     => 0x4000, # 01000000, 16384, 100
+    1     => 0x5000, # 01010000, 20480, 101
+    2     => 0x6000, # 01100000, 24576, 110
+    3     => 0x7000, # 01110000, 28672, 111
 );
 
 # comparitor queue
 
 my %queue = (
     # bit 1-0 (least significant bit shown)
-    '0' => 0x0, # 00000000, 0
-    '1' => 0x1, # 00000001, 1
+    '00' => 0x00, # 00000000, 0
+    '01' => 0x01, # 00000001, 1
+    '10' => 0x02, # 00000010, 2
+    '11' => 0x03, # 00000011, 3
 );
 
 # comparator polarity
@@ -397,9 +404,20 @@ sub _msb {
     }
     return $self->register->[0];
 }
-sub _mux {
-    # for testing purposes
-    return %mux;
+sub _register_data {
+
+    # for testing/validation purposes
+
+    my $tables = {
+        mux         => \%mux,
+        queue       => \%queue,
+        polarity    => \%polarity,
+        rate        => \%rate,
+        mode        => \%mode,
+        gain        => \%gain,
+    };
+
+    return $tables;
 }
 sub _register_default {
     my $self = shift;
@@ -592,20 +610,6 @@ Parameters:
 Optional: A memory address in the form C<0xNN>. See L</PHYSICAL SETUP> for full
 details.
 
-=head2 channel
-
-Sets/gets the currently registered ADC input channel within the object.
-
-Parameters:
-
-    $channel
-
-Optional: String, C<0> through C<3>, representing the ADC's multiplexer
-input channel to read from. Setting through this method overrides the value that
-was set in C<new()> (C<0> by default if never specified), until it is changed
-again. If you are using more than one channel, it's more useful to set the
-channel in your read calls (C<volts()>, C<raw()> and C<percent()>).
-
 =head2 device
 
 Sets/gets the file path information for the i2c device. This shouldn't be used
@@ -631,6 +635,18 @@ Parameters:
 
 Optional: String, the model name of the ADC unit. Defaults to C<ADS1015>. Valid
 values are C</ADS1[01]1[3458]/>.
+
+=head2 channel
+
+Sets/gets the currently registered ADC input channel within the object.
+
+Parameters:
+
+    $channel
+
+Optional: C<0> through C<3> for single-ended operation mode (channels A0-A3), or
+a binary string representing the input and mode to use. See L</INPUT CHANNELS>
+for the parameter map.
 
 =head2 register
 
@@ -766,67 +782,117 @@ each 16-bit register, while element C<2> represents the least significant bits,
 
 =head2 CONFIG REGISTER
 
-Bit 15 should always be set to C<1> when writing. This initiates a conversation
-ADC. When reading, this bit will read C<1> if a conversion is currently
-occuring, and C<0> if the current conversion is complete.
+=head3 CONVERSATION BIT
 
-Bits 14-12 represent the ADC input channel, as well as either a single-ended
+Bit: 15
+
+This bit should always be set to C<1> when writing. This initiates a
+conversation ADC. When reading, this bit will read C<1> if a conversion is
+currently occuring, and C<0> if the current conversion is complete.
+
+=head3 INPUT CHANNELS
+
+Bit: 14-12
+
+Represents the ADC input channel, as well as either a single-ended
 (difference between HIGH and GRD) or differential mode (difference between
-two input channels). Only single-ended is currently supported.
+two input channels).
 
-Below is the binary representation for the input channels (bits 14-12):
+Single mode configuration (with the alternate parameter values):
 
-    Input   Binary
+    Value   Alt     Input
+    -------------------------
 
-    A0      100
-    A1      101
-    A2      110
-    A3      111
+    100     0       A0 (default)
+    101     1       A1
+    110     2       A2
+    111     3       A3
 
-Bits 11-9 are for the programmable gain amplifier. This software uses C<001> or
+Differential mode configuration:
+
+    Value   Diff between
+    --------------------
+
+    000     A0 <-> A1
+    001     A0 <-> A3
+    010     A1 <-> A3
+    011     A2 <-> A3
+
+
+=head3 GAIN AMPLIFIER
+
+Bit: 11-9
+
+Represents the programmable gain amplifier. This software uses C<001> or
 +/-4.096V to cover the Pi's 3.3V output.
 
-    000: FS = +/-6.144V              100: FS = +/-0.512V
-    001: FS = +/-4.096V              101: FS = +/-0.256V
-    010: FS = +/-2.048V (hw default) 110: FS = +/-0.256V
-    011: FS = +/-2.024V              111: FS = +/-0.256V
+    Value   Gain
+    ------------
 
-Bit 8 is for the conversion operation mode. We use single conversion hardware
+    000     +/-6.144V
+    001     +/-4.096V (default)
+    010     +/-2.048V
+    011     +/-2.024V
+    100     +/-0.512V
+    101     +/-0.256V
+    110     +/-0.256V
+    111     +/-0.256V
+
+=head3 OPERATION MODE
+
+Bit: 8
+
+Represents the conversion operation mode. We use single conversion hardware
 default.
 
-    0: continuous conversion
-    1: single conversion (hw default)
+    Value   Mode
+    ------------
 
-Bits 7-5 represent the data rate. We use 128SPS:
+    0       continuous conversion
+    1       single conversion (default)
 
-    000 : 128SPS 100 : 1600SPS (hw default)
-    001 : 250SPS 101 : 2400SPS
-    010 : 490SPS 110 : 3300SPS
-    011 : 920SPS 111 : 3300SPS
+=head3 DATA RATE
 
-Bit 4 is unused.
+Bit: 7-5
 
-=head2 COMPARATOR POLARITY
+Represent the data rate. We use 128SPS by default:
+
+    Value   Rate
+    ----------------
+    000     128SPS (default)
+    001     250SPS
+    010     490SPS
+    011     920SPS
+    100     1600SPS
+    101     2400SPS
+    110     3300SPS
+    111     3300SPS
+
+=head3 COMPARATOR POLARITY
 
 Bit: 3
 
 Represents the comparator polarity. We use C<0> (active low) by default.
 
-    0 - Active Low (hw default)
-    1 - Active High
+    Value   Polarity
+    ----------------
 
-Bit 2 is unused.
+    0       Active Low (default)
+    1       Active High
 
-=head2 COMPARATOR QUEUE
+=head3 COMPARATOR QUEUE
 
 Bit: 1-0
 
 Represents the comparator queue. C<11> (disabled) by default.
 
-    00 : Assert after one conversion
-    01 : Assert after two conversions
-    10 : Assert after four conversions
-    11 : Disable comparator (default)
+    Value   Queue
+    -------------
+
+    00  Assert after one conversion
+    01  Assert after two conversions
+    10  Assert after four conversions
+    11  Disable comparator (default)
 
 =head1 READING DATA
 
@@ -839,6 +905,10 @@ ADC1xxx series ADCs, the width is actually 15 bits, and the ADC10xx units are
 
 See the L<ADC's datasheet|https://cdn-shop.adafruit.com/datasheets/ads1016.pdf>
 for further information.
+
+=head1 NOTES
+
+Bit 4 and 2 of the configuration register are currently unused.
 
 =head1 SEE ALSO
 

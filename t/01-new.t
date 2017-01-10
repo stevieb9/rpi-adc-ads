@@ -13,7 +13,7 @@ my $mod = 'RPi::ADC::ADS';
     is $obj->{model}, 'ADS1015', "default model is ok";
     is $obj->{addr}, 0x48, "default addr is ok";
     is $obj->{device}, '/dev/i2c-1', "default dev is ok";
-    is $obj->{channel}, 0, "default channel is ok";
+    is $obj->{channel}, 0x4000, "default channel is ok";
 
     my @reg = $obj->register;
     is @reg, 2, "default register has proper elem count";
@@ -32,7 +32,7 @@ my $mod = 'RPi::ADC::ADS';
     is $obj->{model}, 'ADS1115', "param model is ok";
     is $obj->{addr}, 0x49, "param addr is ok";
     is $obj->{device}, '/dev/i2c-0', "param dev is ok";
-    is $obj->{channel}, 2, "param channel is ok";
+    is $obj->{channel}, 0x6000, "param channel is ok";
 }
 
 done_testing();
