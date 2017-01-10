@@ -11,16 +11,72 @@ XSLoader::load('RPi::ADC::ADS', $VERSION);
 use constant CONFREG_BASE => 128;
 
 #FIXME: rearrange default msb settings in channel()
-# currently we have it hard-set to 131
 
-# channel multiplexer binary representations
+use constant {
+    DEFAULT_QUEUE       => 0x03,  # bits 1-0 (0-3)
+    MAX_QUEUE           => 0x03,
+
+    DEFAULT_POLARITY    => 0x00,  # bit  3
+    MAX_POLARITY        => 0x08,
+
+    DEFAULT_RATE        => 0x00,  # bits 7-5
+    MAX_RATE            => 0xE0,
+
+    DEFAULT_MODE        => 0x100, # bit  8
+    MAX_MODE            => 0x100,
+
+    DEFAULT_GAIN        => 1, # bits 11-9
+
+};
+
+# channel multiplexer
 
 my %mux = (
     # bits 7-5 are relevant
-    0 => 64,  # 100, 01000000, 0x40
-    1 => 80,  # 101, 01010000, 0x50
-    2 => 96,  # 110, 01100000, 0x60
-    3 => 112, # 111, 01110000, 0x70
+    0 => 0x40,  # 100, 01000000, 64
+    1 => 0x50,  # 101, 01010000, 80
+    2 => 0x60,  # 110, 01100000, 96
+    3 => 0x70,  # 111, 01110000, 112
+);
+
+# comparitor queue
+
+my %queue = (
+    # bit 1-0
+    '00'  => 0x00, # 00000000, 0
+    '01'  => 0x01, # 00000001, 1
+    '10'  => 0x02, # 00000010, 2
+    '11'  => 0x03, # 00000011, 3
+);
+
+# comparator polarity
+
+my %polarity = (
+    # bit 3
+    '0'  => 0x00, # 00000000, 0
+    '1'  => 0x08, # 00000001, 8
+);
+
+# data rate
+
+my %rate = (
+    # bit 7-5
+    '000'  => 0x00, # 00000000, 0
+    '001'  => 0x20, # 00100000, 32
+    '010'  => 0x40, # 01000000, 64
+    '011'  => 0x60, # 01100000, 96
+    '100'  => 0x80, # 10000000, 128
+    '101'  => 0xA0, # 10100000, 160
+    '110'  => 0xC0, # 00000001, 192
+    '111'  => 0xE0, # 00000001, 224
+);
+
+# operating mode
+
+my %mode = (
+    # bit 8
+    '0'  => 0x00,  # 0|00000000, 0
+    '1'  => 0x100, # 1|00000000, 256
 );
 
 # object methods (public)
@@ -50,6 +106,8 @@ sub new {
 
     $self->channel($args{channel});
     $self->queue($args{queue});
+    $self->polarity($args{polarity});
+    $self->mode($args{mode});
 
     return $self;
 }
@@ -143,25 +201,122 @@ sub register {
     }
     return @{ $self->{register_data} };
 }
+sub bits {
+    my $self = shift;
+
+    my @bytes = $self->register;
+
+    my $bits = ($bytes[0] << 8) | $bytes[1];
+
+    return $bits;
+}
 sub queue {
     my ($self, $q) = @_;
 
-    # config register
-
     if (defined $q){
-        if (! grep {$q == $_} (0..3)){
-            die "queue param requires an int 0..3\n";
+        if (! exists $queue{$q}){
+            die "queue param requires a binary string.\n";
         }
-
-        $self->{queue} = $q;
+        $self->{queue} = $queue{$q};
     }
 
-    $self->{queue} = 3 if ! defined $self->{queue};
+    $self->{queue} = DEFAULT_QUEUE if ! defined $self->{queue};
 
-    my ($msb, $lsb) = $self->register;
-    $msb = $msb | $self->{queue};
+    my $bits = $self->bits;
+
+    # unset
+    $bits &= ~MAX_QUEUE;
+
+    # set
+    $bits |= $self->{queue};
+
+    my $lsb = $bits & 0xFF;
+    my $msb = $bits >> 8;
+
+    $self->register($msb, $lsb);
 
     return $self->{queue};
+}
+sub polarity {
+    my ($self, $p) = @_;
+
+    if (defined $p){
+        if (! exists $polarity{$p}){
+            die "polarity param requires a binary string.\n";
+        }
+        $self->{polarity} = $polarity{$p};
+    }
+
+    $self->{polarity} = DEFAULT_POLARITY if ! defined $self->{polarity};
+
+    my $bits = $self->bits;
+
+    # unset
+    $bits &= ~MAX_POLARITY;
+
+    # set
+    $bits |= $self->{polarity};
+
+    my $lsb = $bits & 0xFF;
+    my $msb = $bits >> 8;
+
+    $self->register($msb, $lsb);
+
+    return $self->{polarity};
+}
+sub rate {
+    my ($self, $r) = @_;
+
+    if (defined $r){
+        if (! exists $rate{$r}){
+            die "rate param requires a binary string.\n";
+        }
+        $self->{rate} = $rate{$r};
+    }
+
+    $self->{rate} = DEFAULT_RATE if ! defined $self->{rate};
+
+    my $bits = $self->bits;
+
+    # unset
+    $bits &= ~MAX_RATE;
+
+    # set
+    $bits |= $self->{rate};
+
+    my $lsb = $bits & 0xFF;
+    my $msb = $bits >> 8;
+
+    $self->register($msb, $lsb);
+
+    return $self->{rate};
+}
+sub mode {
+    my ($self, $m) = @_;
+
+    if (defined $m){
+        if (! exists $mode{$m}){
+            die "mode param requires a binary string.\n";
+        }
+        $self->{mode} = $mode{$m};
+    }
+
+    $self->{mode} = DEFAULT_MODE if ! defined $self->{mode};
+
+    my $bits = $self->bits;
+
+    # unset
+    $bits &= ~MAX_MODE;
+
+    # set
+    $bits |= $self->{mode};
+
+    my $lsb = $bits & 0xFF;
+    my $msb = $bits >> 8;
+
+    $self->register($msb, $lsb);
+
+    return $self->{mode};
 }
 
 # object methods (private)
@@ -372,6 +527,10 @@ Optional. The filesystem path to the i2c device file. Defaults to C</dev/i2c-1>
 
 Optional. One of C<0> through C<3> which specifies which channel to read. If
 not sent in, we default to C<0> throughout the object's lifecycle.
+
+    queue => $bin
+
+Optional. #FIXME add desc
 
 =head2 addr
 
@@ -590,7 +749,7 @@ default.
     0: continuous conversion
     1: single conversion (hw default)
 
-Bits 9-5 represent the data rate. We use 128SPS:
+Bits 7-5 represent the data rate. We use 128SPS:
 
     000 : 128SPS 100 : 1600SPS (hw default)
     001 : 250SPS 101 : 2400SPS
@@ -599,14 +758,22 @@ Bits 9-5 represent the data rate. We use 128SPS:
 
 Bit 4 is unused.
 
-Bit 3 is the comparator polarity. We use Active Low by default:
+=head2 COMPARATOR POLARITY
+
+Bit: 3
+
+Represents the comparator polarity. We use C<0> (active low) by default.
 
     0 - Active Low (hw default)
     1 - Active High
 
 Bit 2 is unused.
 
-Bits 1-0 represent the comparator queue. This software has disabled it:
+=head2 COMPARATOR QUEUE
+
+Bit: 1-0
+
+Represents the comparator queue. C<11> (disabled) by default.
 
     00 : Assert after one conversion
     01 : Assert after two conversions
