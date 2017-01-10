@@ -8,11 +8,8 @@ our $VERSION = '0.06';
 require XSLoader;
 XSLoader::load('RPi::ADC::ADS', $VERSION);
 
-use constant CONFREG_BASE => 128;
-
-#FIXME: rearrange default msb settings in channel()
-
 use constant {
+
     DEFAULT_QUEUE       => 0x03,  # bits 1-0 (0-3)
     MAX_QUEUE           => 0x03,
 
@@ -25,28 +22,33 @@ use constant {
     DEFAULT_MODE        => 0x100, # bit  8
     MAX_MODE            => 0x100,
 
-    DEFAULT_GAIN        => 1, # bits 11-9
+    DEFAULT_GAIN        => 0x200, # bits 11-9
+    MAX_GAIN            => 0xE00,
 
+    DEFAULT_CHANNEL     => 0x4000,  # bits 14-12
+    MAX_CHANNEL         => 0x7000,
 };
 
 # channel multiplexer
 
 my %mux = (
-    # bits 7-5 are relevant
-    0 => 0x40,  # 100, 01000000, 64
-    1 => 0x50,  # 101, 01010000, 80
-    2 => 0x60,  # 110, 01100000, 96
-    3 => 0x70,  # 111, 01110000, 112
+    # bit 14-12 (most significant bit shown)
+    '000' => 0x0,    # 00000000, 0
+    '001' => 0x1000, # 00100000, 4096
+    '010' => 0x2000, # 00100000, 8192
+    '011' => 0x3000, # 00110000, 12288
+    '100' => 0x4000, # 01000000, 16384
+    '101' => 0x5000, # 01010000, 20480
+    '110' => 0x6000, # 01100000, 24576
+    '111' => 0x7000, # 01110000, 28672
 );
 
 # comparitor queue
 
 my %queue = (
-    # bit 1-0
-    '00'  => 0x00, # 00000000, 0
-    '01'  => 0x01, # 00000001, 1
-    '10'  => 0x02, # 00000010, 2
-    '11'  => 0x03, # 00000011, 3
+    # bit 1-0 (least significant bit shown)
+    '0' => 0x0, # 00000000, 0
+    '1' => 0x1, # 00000001, 1
 );
 
 # comparator polarity
@@ -79,6 +81,18 @@ my %mode = (
     '1'  => 0x100, # 1|00000000, 256
 );
 
+my %gain = (
+    # bit 11-9 (most significant bit shown)
+    '000'  => 0x00,  # 00000000, 0
+    '001'  => 0x200, # 00000010, 512
+    '010'  => 0x400, # 00000100, 1024
+    '011'  => 0x600, # 00000110, 1536
+    '100'  => 0x800, # 00001000, 2048
+    '101'  => 0xA00, # 00001010, 2560
+    '110'  => 0xC00, # 00001100, 3072
+    '111'  => 0xE00, # 00001110, 3584
+);
+
 # object methods (public)
 
 sub new {
@@ -102,12 +116,13 @@ sub new {
     $self->addr($args{addr});
     $self->device($args{device});
 
-    # control register MSB switches
+    # control register switches
 
     $self->channel($args{channel});
     $self->queue($args{queue});
     $self->polarity($args{polarity});
     $self->mode($args{mode});
+    $self->gain($args{mode});
 
     return $self;
 }
@@ -127,23 +142,29 @@ sub addr {
     return $self->{addr};
 }
 sub channel {
-    my ($self, $chan) = @_;
+    my ($self, $c) = @_;
 
-    if (defined $chan){
-        if ($chan !~ /\d/ || ! grep {$chan == $_} qw(0 1 2 3)){
-            die "invalid channel specification: $chan. " .
-                "use 0, 1, 2 or 3\n";
+    if (defined $c){
+        if (! exists $mux{$c}){
+            die "channel param requires either 0, 1, 2 or 3\n";
         }
-
-        $self->{channel} = $chan;
-
-        my ($msb, $lsb) = $self->register;
-        $msb = $msb | $mux{$chan};
-
-        $self->register($msb, $lsb);
+        $self->{channel} = $mux{$c};
     }
 
-    $self->{channel} = 0 if ! defined $self->{channel};
+    $self->{channel} = DEFAULT_CHANNEL if ! defined $self->{channel};
+
+    my $bits = $self->bits;
+
+    # unset
+    $bits &= ~MAX_CHANNEL;
+
+    # set
+    $bits |= $self->{channel};
+
+    my $lsb = $bits & 0xFF;
+    my $msb = $bits >> 8;
+
+    $self->register($msb, $lsb);
 
     return $self->{channel};
 }
@@ -317,6 +338,33 @@ sub mode {
     $self->register($msb, $lsb);
 
     return $self->{mode};
+}
+sub gain {
+    my ($self, $m) = @_;
+
+    if (defined $m) {
+        if (!exists $gain{$m}) {
+            die "gain param requires a binary string.\n";
+        }
+        $self->{gain} = $gain{$m};
+    }
+
+    $self->{gain} = DEFAULT_GAIN if !defined $self->{gain};
+
+    my $bits = $self->bits;
+
+    # unset
+    $bits &= ~MAX_GAIN;
+
+    # set
+    $bits |= $self->{gain};
+
+    my $lsb = $bits & 0xFF;
+    my $msb = $bits >> 8;
+
+    $self->register( $msb, $lsb );
+
+    return $self->{gain};
 }
 
 # object methods (private)

@@ -8,48 +8,48 @@ my $mod = 'RPi::ADC::ADS';
 
 my %map = (
     '000' => [
-        33539,
-        131,
-        3,
-    ],
+            49411,
+            193,
+            3,
+        ],
     '001' => [
-        37635,
-        147,
-        3,
-    ],
+            49923,
+            195,
+            3,
+        ],
     '010' => [
-        41731,
-        163,
-        3,
-    ],
+            50435,
+            197,
+            3,
+        ],
     '011' => [
-        45827,
-        179,
-        3,
-    ],
-    '100' => [ # default
-        49923,
-        195,
-        3,
-    ],
+            50947,
+            199,
+            3,
+        ],
+    '100' => [
+            51459,
+            201,
+            3,
+        ],
     '101' => [
-        54019,
-        211,
-        3,
-    ],
+            51971,
+            203,
+            3,
+        ],
     '110' => [
-        58115,
-        227,
-        3,
-    ],
+            52483,
+            205,
+            3,
+        ],
     '111' => [
-        62211,
-        243,
-        3,
-    ],
+            52995,
+            207,
+            3,
+        ],
 );
 
-{ # channel (bits 2-0)
+{ # gain (bits 2-0)
 
     my $o = $mod->new;
 
@@ -62,7 +62,7 @@ my %map = (
     is $l, 3, "default lsb ok";
 
     for (qw(000 001 010 011 100 101 110 111)){
-        $o->channel($_);
+        $o->gain($_);
         is $o->bits, $map{$_}->[0], "$_ bits ok";
 
         # printf("$_: %b\n", $o->bits);
@@ -70,22 +70,24 @@ my %map = (
         my ($m, $l) = $o->register;
         is $m, $map{$_}->[1], "$_ msb ok";
         is $l, $map{$_}->[2], "$_ lsb ok";
+
     }
 
-    $o->channel('000');
+    $o->gain('000');
     # printf("000: %b\n", $o->bits);
-    is $o->bits, 33539, "000 goes back to default bits ok";
+    is $o->bits, 49411, "000 goes back to unset bits ok";
 }
 
-
+done_testing();
+exit;
 { # bad
 
     my $o = $mod->new;
 
-    my $ok = eval { $o->channel('11'); 1; };
+    my $ok = eval { $o->gain('11'); 1; };
 
     is $ok, undef, "dies on bad param";
-    like $@, qr/channel param requires/, "...error msg ok";
+    like $@, qr/gain param requires/, "...error msg ok";
 }
 
 done_testing();
