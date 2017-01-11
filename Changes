@@ -1,5 +1,12 @@
 Revision history for Perl extension RPi::ADC::ADS
 
+0.07    2017-01-10
+        - POD fixes
+        - added _bit_set(), and consolodated a lot of repetitive config
+          register bit switching
+        - removed _register_default(). We now set this in the new() call to
+          0x80 (MSB) and 0x00 (LSB)
+
 0.06    2017-01-10
         - all configuration register options are now available (less bits 4 and
           2)

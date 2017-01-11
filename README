@@ -9,10 +9,15 @@ SYNOPSIS
         # with their defaults if you don't specify them
 
         my $adc = RPi::ADC::ADS->new(
-            model   => 'ADS1015',
-            addr    => 0x48,
-            device  => '/dev/i2c-1',
-            channel => 0,
+            model    => 'ADS1015',
+            addr     => 0x48,
+            device   => '/dev/i2c-1',
+            channel  => 0,
+            gain     => 1,
+            mode     => 1,
+            rate     => 0,
+            polarity => 0,
+            queue    => 3,
         );
 
         my $volts   = $adc->volts;
@@ -238,10 +243,9 @@ DATA RETRIEVAL METHODS
 
         $channel
 
-    Optional: See <L/INPUT CHANNELS> for parameter values and details.
-    Specifies the ADC input channel to read from. Setting this parameter
-    allows you to read all four channels without changing the default set in
-    the object.
+    Optional: See INPUT CHANNELS for parameter values and details. Specifies
+    the ADC input channel to read from. Setting this parameter allows you to
+    read all four channels without changing the default set in the object.
 
     Return: A floating point number between `0' and the maximum voltage
     output by the Pi's GPIO pins.
@@ -326,10 +330,10 @@ TECHNICAL DATA
   REGISTERS
     Both the conversion and configuration registers are 16-bits wide.
 
-    The write buffer consists of an array with three elements. Element `0'
-    is the register pointer, which allows you to select the register to use.
-    Value `0' for the conversion register and `1' for the configuration
-    register.
+    The write buffer for the config register consists of an array with three
+    elements. Element `0' is the register pointer, which allows you to
+    select the register to use. Value `0' for the conversion register and
+    `1' for the configuration register.
 
     Element `1' is a byte long, and represents the most significant bits
     (15-8) of each 16-bit register, while element `2' represents the least
@@ -365,15 +369,15 @@ TECHNICAL DATA
         Param   Value   Diff between
         ----------------------------
 
-        0       000     A0 <-> A1
-        1       001     A0 <-> A3
-        2       010     A1 <-> A3
-        3       011     A2 <-> A3
+        4       000     A0 <-> A1
+        5       001     A0 <-> A3
+        6       010     A1 <-> A3
+        7       011     A2 <-> A3
 
     GAIN AMPLIFIER
     Bit: 11-9
 
-    Represents the programmable gain amplifier. This software uses `001' or
+    Represents the programmable gain amplifier. This software uses `0' or
     +/-4.096V to cover the Pi's 3.3V output.
 
         Param   Value   Gain
@@ -403,7 +407,8 @@ TECHNICAL DATA
     DATA RATE
     Bit: 7-5
 
-    Represent the data rate. We use 128SPS by default:
+    Represent the data rate. We use 128SPS (128 Samples Per Second) by
+    default:
 
         Param   Value   Rate
         --------------------
@@ -430,7 +435,7 @@ TECHNICAL DATA
     COMPARATOR QUEUE
     Bit: 1-0
 
-    Represents the comparator queue. `11' (disabled) by default.
+    Represents the comparator queue. `3' (disabled) by default.
 
         Param   Value   Queue
         ---------------------

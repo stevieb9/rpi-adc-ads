@@ -63,8 +63,8 @@ my %queue = (
 my %polarity = (
     # bit 3 (least significant bit shown)
 
-    '0'  => 0x00, # 00000000, 0
-    '1'  => 0x08, # 00000001, 8
+    0 => 0x00, # 00000000, 0
+    1 => 0x08, # 00000001, 8
 );
 
 # data rate
@@ -87,8 +87,8 @@ my %rate = (
 my %mode = (
     # bit 8 (both bits shown)
 
-    '0'  => 0x00,  # 0|00000000, 0
-    '1'  => 0x100, # 1|00000000, 256
+    0 => 0x00,  # 0|00000000, 0
+    1 => 0x100, # 1|00000000, 256
 );
 
 my %gain = (
@@ -108,18 +108,12 @@ my %gain = (
 
 sub new {
     my ($class, %args) = @_;
-    # model (done)
-    # addr (done)
-    # dev (done)
-    # channel (done)
-    # mode
-    # rate 
-    # polarity
-    # queue
 
     my $self = bless {}, $class;
 
-    $self->_register_default;
+    # set up the initial default config register
+
+    $self->register(0x80, 0x00);
 
     # primary C args
 
@@ -197,20 +191,7 @@ sub channel {
     }
 
     $self->{channel} = DEFAULT_CHANNEL if ! defined $self->{channel};
-
-    my $bits = $self->bits;
-
-    # unset
-    $bits &= ~MAX_CHANNEL;
-
-    # set
-    $bits |= $self->{channel};
-
-    my $lsb = $bits & 0xFF;
-    my $msb = $bits >> 8;
-
-    $self->register($msb, $lsb);
-
+    $self->_bit_set($self->{channel}, MAX_CHANNEL);
     return $self->{channel};
 }
 sub queue {
@@ -224,20 +205,7 @@ sub queue {
     }
 
     $self->{queue} = DEFAULT_QUEUE if ! defined $self->{queue};
-
-    my $bits = $self->bits;
-
-    # unset
-    $bits &= ~MAX_QUEUE;
-
-    # set
-    $bits |= $self->{queue};
-
-    my $lsb = $bits & 0xFF;
-    my $msb = $bits >> 8;
-
-    $self->register($msb, $lsb);
-
+    $self->_bit_set($self->{queue}, MAX_QUEUE);
     return $self->{queue};
 }
 sub polarity {
@@ -251,20 +219,7 @@ sub polarity {
     }
 
     $self->{polarity} = DEFAULT_POLARITY if ! defined $self->{polarity};
-
-    my $bits = $self->bits;
-
-    # unset
-    $bits &= ~MAX_POLARITY;
-
-    # set
-    $bits |= $self->{polarity};
-
-    my $lsb = $bits & 0xFF;
-    my $msb = $bits >> 8;
-
-    $self->register($msb, $lsb);
-
+    $self->_bit_set($self->{polarity}, MAX_POLARITY);
     return $self->{polarity};
 }
 sub rate {
@@ -278,20 +233,7 @@ sub rate {
     }
 
     $self->{rate} = DEFAULT_RATE if ! defined $self->{rate};
-
-    my $bits = $self->bits;
-
-    # unset
-    $bits &= ~MAX_RATE;
-
-    # set
-    $bits |= $self->{rate};
-
-    my $lsb = $bits & 0xFF;
-    my $msb = $bits >> 8;
-
-    $self->register($msb, $lsb);
-
+    $self->_bit_set($self->{rate}, MAX_RATE);
     return $self->{rate};
 }
 sub mode {
@@ -305,20 +247,7 @@ sub mode {
     }
 
     $self->{mode} = DEFAULT_MODE if ! defined $self->{mode};
-
-    my $bits = $self->bits;
-
-    # unset
-    $bits &= ~MAX_MODE;
-
-    # set
-    $bits |= $self->{mode};
-
-    my $lsb = $bits & 0xFF;
-    my $msb = $bits >> 8;
-
-    $self->register($msb, $lsb);
-
+    $self->_bit_set($self->{mode}, MAX_MODE);
     return $self->{mode};
 }
 sub gain {
@@ -332,20 +261,7 @@ sub gain {
     }
 
     $self->{gain} = DEFAULT_GAIN if !defined $self->{gain};
-
-    my $bits = $self->bits;
-
-    # unset
-    $bits &= ~MAX_GAIN;
-
-    # set
-    $bits |= $self->{gain};
-
-    my $lsb = $bits & 0xFF;
-    my $msb = $bits >> 8;
-
-    $self->register( $msb, $lsb );
-
+    $self->_bit_set($self->{gain}, MAX_GAIN);
     return $self->{gain};
 }
 
@@ -378,11 +294,30 @@ sub register {
 
         $self->{register_data} = [$msb, $lsb];
     }
+
     return @{ $self->{register_data} };
 }
 
 # private methods
 
+sub _bit_set {
+    # unset and set config register bits
+
+    my ($self, $value, $max) = @_;
+
+    my $bits = $self->bits;
+
+    # unset
+    $bits &= ~$max;
+
+    # set
+    $bits |= $value;
+
+    my $lsb = $bits & 0xFF;
+    my $msb = $bits >> 8;
+
+    $self->register($msb, $lsb);
+}
 sub _lsb {
     # least significant byte of config register
 
@@ -426,17 +361,9 @@ sub _register_data {
 
     return $tables;
 }
-sub _register_default {
-    my $self = shift;
-
-    # config register
-
-    my $msb = 195;  # 11000011, 0xC3
-    my $lsb = 3;    # 00000011, 0x03
-
-    $self->register($msb, $lsb);
-}
 sub _resolution {
+    # decides/sets resolution to 12 or 16 bits
+
     my ($self, $model) = @_;
 
     if (defined $model){
@@ -519,10 +446,15 @@ on Raspberry Pi
     # with their defaults if you don't specify them
 
     my $adc = RPi::ADC::ADS->new(
-        model   => 'ADS1015',
-        addr    => 0x48,
-        device  => '/dev/i2c-1',
-        channel => 0,
+        model    => 'ADS1015',
+        addr     => 0x48,
+        device   => '/dev/i2c-1',
+        channel  => 0,
+        gain     => 1,
+        mode     => 1,
+        rate     => 0,
+        polarity => 0,
+        queue    => 3,
     );
 
     my $volts   = $adc->volts;
@@ -859,9 +791,10 @@ See L</fetch> for details on the C<wbuf> arguments.
 
 Both the conversion and configuration registers are 16-bits wide.
 
-The write buffer consists of an array with three elements. Element C<0> is the
-register pointer, which allows you to select the register to use. Value C<0> for
-the conversion register and C<1> for the configuration register.
+The write buffer for the config register consists of an array with three 
+elements. Element C<0> is the register pointer, which allows you to select the
+register to use. Value C<0> for the conversion register and C<1> for the 
+configuration register.
 
 Element C<1> is a byte long, and represents the most significant bits (15-8) of
 each 16-bit register, while element C<2> represents the least significant bits,
@@ -900,17 +833,17 @@ Differential mode configuration:
     Param   Value   Diff between
     ----------------------------
 
-    0       000     A0 <-> A1
-    1       001     A0 <-> A3
-    2       010     A1 <-> A3
-    3       011     A2 <-> A3
+    4       000     A0 <-> A1
+    5       001     A0 <-> A3
+    6       010     A1 <-> A3
+    7       011     A2 <-> A3
 
 
 =head3 GAIN AMPLIFIER
 
 Bit: 11-9
 
-Represents the programmable gain amplifier. This software uses C<001> or
+Represents the programmable gain amplifier. This software uses C<0> or
 +/-4.096V to cover the Pi's 3.3V output.
 
     Param   Value   Gain
@@ -942,7 +875,7 @@ default.
 
 Bit: 7-5
 
-Represent the data rate. We use 128SPS by default:
+Represent the data rate. We use 128SPS (128 Samples Per Second) by default:
 
     Param   Value   Rate
     --------------------
@@ -971,7 +904,7 @@ Represents the comparator polarity. We use C<0> (active low) by default.
 
 Bit: 1-0
 
-Represents the comparator queue. C<11> (disabled) by default.
+Represents the comparator queue. C<3> (disabled) by default.
 
     Param   Value   Queue
     ---------------------
@@ -990,7 +923,7 @@ ADC1xxx series ADCs, the width is actually 15 bits, and the ADC10xx units are
 11 bits wide (as the resolution on these models are only 12-bit as opposed to
 16-bit).
 
-See the L<ADC's datasheet|https://cdn-shop.adafruit.com/datasheets/ads1016.pdf>
+See the L<ADC's datasheet|https://cdn-shop.adafruit.com/datasheets/ads1015.pdf>
 for further information.
 
 =head1 NOTES

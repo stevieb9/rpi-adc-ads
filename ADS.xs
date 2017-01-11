@@ -55,12 +55,9 @@ int fetch(int addr, char * dev, char * wbuf1, char * wbuf2, int res){
 
     read(i2c_file, read_buf, 2);
 
-    // shift left a full byte and merge (OR) the two bytes together
-
     int16_t conversion = read_buf[0] << 8 | read_buf[1];
 
     if (res == 12){
-        // shift right by four bits
         conversion = conversion >> 4;
     }
    
