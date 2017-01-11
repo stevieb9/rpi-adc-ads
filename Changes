@@ -1,5 +1,8 @@
 Revision history for Perl extension RPi::ADC::ADS
 
+1.01 UNREL
+        - removed _lsb() and _msb() as they were no longer needed or referenced
+
 1.00    2017-01-11
         - combined all the config register subs into a BEGIN block, we now auto
           generate them all and put them into the symbol table. This reduces a

@@ -3,7 +3,7 @@ package RPi::ADC::ADS;
 use strict;
 use warnings;
 
-our $VERSION = '1.00';
+our $VERSION = '1.01';
 
 require XSLoader;
 XSLoader::load('RPi::ADC::ADS', $VERSION);
@@ -126,7 +126,7 @@ BEGIN {
             my ($self, $opt) = @_;
 
             if (defined $opt) {
-                if (!exists $param_map->{$sub}{$opt}) {
+                if (! exists $param_map->{$sub}{$opt}) {
                     die "$sub param requires an integer\n";
                 }
                 $self->{$sub} = $param_map->{$sub}{$opt};
@@ -135,7 +135,7 @@ BEGIN {
             my $default = "DEFAULT_" . uc $sub;
             my $max     = "MAX_"     . uc $sub;
 
-            $self->{$sub} = __PACKAGE__->$default if !defined $self->{$sub};
+            $self->{$sub} = __PACKAGE__->$default if ! defined $self->{$sub};
             $self->_bit_set($self->{$sub}, __PACKAGE__->$max);
             return $self->{$sub};
         }
@@ -271,34 +271,6 @@ sub _bit_set {
     my $msb = $bits >> 8;
 
     $self->register($msb, $lsb);
-}
-sub _lsb {
-    # least significant byte of config register
-
-    my ($self, $lsb) = @_;
-
-    if (defined $lsb){
-        if (! grep {$lsb == $_} (0..255)){
-            die "_lsb() requires an int 0..255\n";
-        }
-        my $msb = $self->register->[0];
-        $self->register($msb, $lsb);
-    }
-    return $self->register->[1];
-}
-sub _msb {
-    # most significant byte of config register
-
-    my ($self, $msb) = @_;
-
-    if (defined $msb){
-        if (! grep {$msb == $_} (0..255)){
-            die "_msb() requires an int 0..255\n";
-        }
-        my $lsb = $self->register->[1];
-        $self->register($msb, $lsb);
-    }
-    return $self->register->[0];
 }
 sub _register_data {
 
@@ -833,6 +805,7 @@ Represent the data rate. We use 128SPS (128 Samples Per Second) by default:
 
     Param   Value   Rate
     --------------------
+
     0       000     128SPS (default)
     1       001     250SPS
     2       010     490SPS
