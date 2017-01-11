@@ -25,7 +25,7 @@ int fetch(int addr, char * dev, char * wbuf1, char * wbuf2, int res){
         perror(dev);
         exit(1);
     }
-    
+   
     if (ioctl(i2c_file, I2C_SLAVE, addr) < 0){
         perror("failed to acquire bus access and/or talk to slave");
         exit(1);
