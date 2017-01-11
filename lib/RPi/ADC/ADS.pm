@@ -91,6 +91,8 @@ my %mode = (
     1 => 0x100, # 1|00000000, 256
 );
 
+# amplifier gain
+
 my %gain = (
     # bit 11-9 (most significant bit shown)
 
@@ -727,7 +729,7 @@ Implemented as:
 
     int
     fetch (addr, dev, wbuf1, wbuf2, res)
-        int	addr
+        int addr
         char * dev
         char * wbuf1
         char * wbuf2
@@ -744,7 +746,7 @@ Implemented as:
 
     float
     voltage_c (addr, dev, wbuf1, wbuf2, res)
-        int	addr
+        int addr
         char * dev
         char * wbuf1
         char * wbuf2
@@ -760,7 +762,7 @@ Implemented as:
 
     int
     raw_c (addr, dev, wbuf1, wbuf2, res)
-        int	addr
+        int addr
         char * dev
         char * wbuf1
         char * wbuf2
@@ -777,7 +779,7 @@ Implemented as:
 
     float
     percent_c (addr, dev, wbuf1, wbuf2, res)
-        int	addr
+        int addr
         char * dev
         char * wbuf1
         char * wbuf2
@@ -843,7 +845,7 @@ Differential mode configuration:
 
 Bit: 11-9
 
-Represents the programmable gain amplifier. This software uses C<0> or
+Represents the programmable gain amplifier. This software uses C<1> or
 +/-4.096V to cover the Pi's 3.3V output.
 
     Param   Value   Gain

@@ -271,7 +271,7 @@ C FUNCTIONS
 
         int
         fetch (addr, dev, wbuf1, wbuf2, res)
-            int     addr
+            int addr
             char * dev
             char * wbuf1
             char * wbuf2
@@ -287,7 +287,7 @@ C FUNCTIONS
 
         float
         voltage_c (addr, dev, wbuf1, wbuf2, res)
-            int     addr
+            int addr
             char * dev
             char * wbuf1
             char * wbuf2
@@ -302,7 +302,7 @@ C FUNCTIONS
 
         int
         raw_c (addr, dev, wbuf1, wbuf2, res)
-            int     addr
+            int addr
             char * dev
             char * wbuf1
             char * wbuf2
@@ -318,7 +318,7 @@ C FUNCTIONS
 
         float
         percent_c (addr, dev, wbuf1, wbuf2, res)
-            int     addr
+            int addr
             char * dev
             char * wbuf1
             char * wbuf2
@@ -377,7 +377,7 @@ TECHNICAL DATA
     GAIN AMPLIFIER
     Bit: 11-9
 
-    Represents the programmable gain amplifier. This software uses `0' or
+    Represents the programmable gain amplifier. This software uses `1' or
     +/-4.096V to cover the Pi's 3.3V output.
 
         Param   Value   Gain
