@@ -3,7 +3,7 @@ package RPi::ADC::ADS;
 use strict;
 use warnings;
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 require XSLoader;
 XSLoader::load('RPi::ADC::ADS', $VERSION);
@@ -763,7 +763,7 @@ Parameters:
 
     $channel
 
-Optional: See <L/INPUT CHANNELS> for parameter values and details. Specifies the
+Optional: See L</INPUT CHANNELS> for parameter values and details. Specifies the
 ADC input channel to read from. Setting this parameter allows you to read all
 four channels without changing the default set in the object.
 
