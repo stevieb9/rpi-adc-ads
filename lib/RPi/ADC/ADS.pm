@@ -854,7 +854,7 @@ Represents the comparator queue. We use C<3> (disabled) by default.
 Each channel has a conversion register (that contains the actual analog input).
 This register is 16 bits wide. With that said, the most significant bit is used
 to identify whether the number is positive or negative, so technically, for the
-ADC1xxx series ADCs, the width is actually 15 bits, and the ADC10xx units are
+ADC11xx series ADCs, the width is actually 15 bits, and the ADC10xx units are
 11 bits wide (as the resolution on these models are only 12-bit as opposed to
 16-bit).
 
