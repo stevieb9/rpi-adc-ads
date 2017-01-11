@@ -25,7 +25,7 @@ use constant {
     DEFAULT_GAIN        => 0x200, # bits 11-9
     MAX_GAIN            => 0xE00,
 
-    DEFAULT_CHANNEL     => 0x4000,  # bits 14-12
+    DEFAULT_CHANNEL     => 0x4000, # bits 14-12
     MAX_CHANNEL         => 0x7000,
 };
 
@@ -33,35 +33,36 @@ use constant {
 
 my %mux = (
     # bit 14-12 (most significant bit shown)
-    '000' => 0x0,    # 00000000, 0
-    '001' => 0x1000, # 00100000, 4096
-    '010' => 0x2000, # 00100000, 8192
-    '011' => 0x3000, # 00110000, 12288
-    '100' => 0x4000, # 01000000, 16384
-    '101' => 0x5000, # 01010000, 20480
-    '110' => 0x6000, # 01100000, 24576
-    '111' => 0x7000, # 01110000, 28672
 
-    0     => 0x4000, # 01000000, 16384, 100
-    1     => 0x5000, # 01010000, 20480, 101
-    2     => 0x6000, # 01100000, 24576, 110
-    3     => 0x7000, # 01110000, 28672, 111
+    # single-ended
+    0 => 0x4000, # 01000000, 16384
+    1 => 0x5000, # 01010000, 20480
+    2 => 0x6000, # 01100000, 24576
+    3 => 0x7000, # 01110000, 28672
+
+    # differential
+    4 => 0x0,    # 00000000, 0
+    5 => 0x1000, # 00100000, 4096
+    6 => 0x2000, # 00100000, 8192
+    7 => 0x3000, # 00110000, 12288
 );
 
 # comparitor queue
 
 my %queue = (
     # bit 1-0 (least significant bit shown)
-    '00' => 0x00, # 00000000, 0
-    '01' => 0x01, # 00000001, 1
-    '10' => 0x02, # 00000010, 2
-    '11' => 0x03, # 00000011, 3
+
+    0 => 0x00, # 00000000, 0
+    1 => 0x01, # 00000001, 1
+    2 => 0x02, # 00000010, 2
+    3 => 0x03, # 00000011, 3
 );
 
 # comparator polarity
 
 my %polarity = (
-    # bit 3
+    # bit 3 (least significant bit shown)
+
     '0'  => 0x00, # 00000000, 0
     '1'  => 0x08, # 00000001, 8
 );
@@ -69,35 +70,38 @@ my %polarity = (
 # data rate
 
 my %rate = (
-    # bit 7-5
-    '000'  => 0x00, # 00000000, 0
-    '001'  => 0x20, # 00100000, 32
-    '010'  => 0x40, # 01000000, 64
-    '011'  => 0x60, # 01100000, 96
-    '100'  => 0x80, # 10000000, 128
-    '101'  => 0xA0, # 10100000, 160
-    '110'  => 0xC0, # 00000001, 192
-    '111'  => 0xE0, # 00000001, 224
+    # bit 7-5 (least significant bit shown)
+
+    0 => 0x00, # 00000000, 0
+    1 => 0x20, # 00100000, 32
+    2 => 0x40, # 01000000, 64
+    3 => 0x60, # 01100000, 96
+    4 => 0x80, # 10000000, 128
+    5 => 0xA0, # 10100000, 160
+    6 => 0xC0, # 00000001, 192
+    7 => 0xE0, # 00000001, 224
 );
 
 # operating mode
 
 my %mode = (
-    # bit 8
+    # bit 8 (both bits shown)
+
     '0'  => 0x00,  # 0|00000000, 0
     '1'  => 0x100, # 1|00000000, 256
 );
 
 my %gain = (
     # bit 11-9 (most significant bit shown)
-    '000'  => 0x00,  # 00000000, 0
-    '001'  => 0x200, # 00000010, 512
-    '010'  => 0x400, # 00000100, 1024
-    '011'  => 0x600, # 00000110, 1536
-    '100'  => 0x800, # 00001000, 2048
-    '101'  => 0xA00, # 00001010, 2560
-    '110'  => 0xC00, # 00001100, 3072
-    '111'  => 0xE00, # 00001110, 3584
+
+    0 => 0x00,  # 00000000, 0
+    1 => 0x200, # 00000010, 512
+    2 => 0x400, # 00000100, 1024
+    3 => 0x600, # 00000110, 1536
+    4 => 0x800, # 00001000, 2048
+    5 => 0xA00, # 00001010, 2560
+    6 => 0xC00, # 00001100, 3072
+    7 => 0xE00, # 00001110, 3584
 );
 
 # object methods (public)
@@ -148,33 +152,6 @@ sub addr {
 
     return $self->{addr};
 }
-sub channel {
-    my ($self, $c) = @_;
-
-    if (defined $c){
-        if (! exists $mux{$c}){
-            die "channel param requires either 0, 1, 2 or 3\n";
-        }
-        $self->{channel} = $mux{$c};
-    }
-
-    $self->{channel} = DEFAULT_CHANNEL if ! defined $self->{channel};
-
-    my $bits = $self->bits;
-
-    # unset
-    $bits &= ~MAX_CHANNEL;
-
-    # set
-    $bits |= $self->{channel};
-
-    my $lsb = $bits & 0xFF;
-    my $msb = $bits >> 8;
-
-    $self->register($msb, $lsb);
-
-    return $self->{channel};
-}
 sub device {
     my ($self, $dev) = @_;
 
@@ -209,41 +186,39 @@ sub model {
 
     return $self->{model};
 }
-sub register {
-    my ($self, $msb, $lsb) = @_;
+sub channel {
+    my ($self, $c) = @_;
 
-    # config register
-
-    if (defined $msb){
-        if (! defined $lsb){
-            die "register() requires \$msb and \$lsb params\n";
+    if (defined $c){
+        if (! exists $mux{$c}){
+            die "channel param requires an integer\n";
         }
-        if (! grep {$msb == $_} (0..255)){
-            die "msg param requires an int 0..255\n";
-        }
-        if (! grep {$lsb == $_} (0..255)){
-            die "lsb param requires an int 0..255\n";
-        }
-
-        $self->{register_data} = [$msb, $lsb];
+        $self->{channel} = $mux{$c};
     }
-    return @{ $self->{register_data} };
-}
-sub bits {
-    my $self = shift;
 
-    my @bytes = $self->register;
+    $self->{channel} = DEFAULT_CHANNEL if ! defined $self->{channel};
 
-    my $bits = ($bytes[0] << 8) | $bytes[1];
+    my $bits = $self->bits;
 
-    return $bits;
+    # unset
+    $bits &= ~MAX_CHANNEL;
+
+    # set
+    $bits |= $self->{channel};
+
+    my $lsb = $bits & 0xFF;
+    my $msb = $bits >> 8;
+
+    $self->register($msb, $lsb);
+
+    return $self->{channel};
 }
 sub queue {
     my ($self, $q) = @_;
 
     if (defined $q){
         if (! exists $queue{$q}){
-            die "queue param requires a binary string.\n";
+            die "queue param requires an integer.\n";
         }
         $self->{queue} = $queue{$q};
     }
@@ -270,7 +245,7 @@ sub polarity {
 
     if (defined $p){
         if (! exists $polarity{$p}){
-            die "polarity param requires a binary string.\n";
+            die "polarity param requires an integer.\n";
         }
         $self->{polarity} = $polarity{$p};
     }
@@ -297,7 +272,7 @@ sub rate {
 
     if (defined $r){
         if (! exists $rate{$r}){
-            die "rate param requires a binary string.\n";
+            die "rate param requires an integer.\n";
         }
         $self->{rate} = $rate{$r};
     }
@@ -324,7 +299,7 @@ sub mode {
 
     if (defined $m){
         if (! exists $mode{$m}){
-            die "mode param requires a binary string.\n";
+            die "mode param requires an integer.\n";
         }
         $self->{mode} = $mode{$m};
     }
@@ -351,7 +326,7 @@ sub gain {
 
     if (defined $m) {
         if (!exists $gain{$m}) {
-            die "gain param requires a binary string.\n";
+            die "gain param requires an integer.\n";
         }
         $self->{gain} = $gain{$m};
     }
@@ -374,7 +349,39 @@ sub gain {
     return $self->{gain};
 }
 
-# object methods (private)
+# operational methods (public)
+
+sub bits {
+    my $self = shift;
+
+    my @bytes = $self->register;
+
+    my $bits = ($bytes[0] << 8) | $bytes[1];
+
+    return $bits;
+}
+sub register {
+    my ($self, $msb, $lsb) = @_;
+
+    # config register
+
+    if (defined $msb){
+        if (! defined $lsb){
+            die "register() requires \$msb and \$lsb params\n";
+        }
+        if (! grep {$msb == $_} (0..255)){
+            die "msg param requires an int 0..255\n";
+        }
+        if (! grep {$lsb == $_} (0..255)){
+            die "lsb param requires an int 0..255\n";
+        }
+
+        $self->{register_data} = [$msb, $lsb];
+    }
+    return @{ $self->{register_data} };
+}
+
+# private methods
 
 sub _lsb {
     # least significant byte of config register
@@ -591,12 +598,27 @@ Optional. The filesystem path to the i2c device file. Defaults to C</dev/i2c-1>
 
     channel => $int
 
-Optional. One of C<0> through C<3> which specifies which channel to read. If
-not sent in, we default to C<0> throughout the object's lifecycle.
+Optional. See L</INPUT CHANNELS> for parameter values and details.
 
-    queue => $bin
+    gain => $int
 
-Optional. #FIXME add desc
+Optional. See L</GAIN AMPLIFIER> for parameter values and details.
+
+    mode => $int
+
+Optional. See L</OPERATION MODE> for parameter values and details.
+
+    rate => $int
+
+Optional. See L</DATA RATE> for parameter values and details.
+
+    polarity => $int
+
+Optional. See L</COMPARATOR POLARITY> for parameter values and details.
+
+    queue => $int
+
+Optional. See L</COMPARATOR QUEUE> for parameter values and details.
 
 =head2 addr
 
@@ -638,17 +660,82 @@ values are C</ADS1[01]1[3458]/>.
 
 =head2 channel
 
-Sets/gets the currently registered ADC input channel within the object.
+Sets/gets the currently registered ADC input channel within the object. Both
+single-ended and differential operation mode are available.
 
 Parameters:
 
     $channel
 
-Optional: C<0> through C<3> for single-ended operation mode (channels A0-A3), or
-a binary string representing the input and mode to use. See L</INPUT CHANNELS>
-for the parameter map.
+Optional: See L</INPUT CHANNELS> for the parameter values and details.
 
-=head2 register
+=head2 gain
+
+Sets/gets the programmable gain amplifier.
+
+Parameters:
+
+    $int
+
+Optional: See L</GAIN AMPLIFIER> for the parameter values and details.
+
+=head2 mode
+
+Sets/gets the conversion operation mode, either single conversion or continuous
+conversion.
+
+Parameters:
+
+    $int
+
+Optional: See L</OPERATION MODE> for the parameter values and details.
+
+=head2 rate
+
+Sets/gets the data rate.
+
+Parameters:
+
+    $int
+
+Optional: See L</DATA RATE> for the parameter values and details.
+
+=head2 polarity
+
+Sets/gets the comparitor polarity.
+
+Parameters:
+
+    $int
+
+Optional: See L</COMPARATOR POLARITY> for the parameter values and details.  
+
+=head2 queue
+
+Sets/gets the comparator queue configuration.
+
+Parameters:
+
+    $int
+
+Optional: See L</COMPARATOR QUEUE> for the parameter values and details.  
+
+=head1 OPERATIONAL METHODS
+
+These methods are for core operation, but are left public as they may be of use
+for those who want to tinker with the innards.
+
+=head2 bits
+
+Separates the 16-bit wide configuration register and returns an array
+containing the Most Significant Byte as the first element, and the Least
+Significant Byte as the second element.
+
+Parameters: None
+
+Return: Array of two elements (MSB, LSB).
+
+=head2 register 
 
 Sets/gets the ADC's config register. This has been left public for convenience
 for those who understand the hardware very well. It really shouldn't be used
@@ -676,9 +763,9 @@ Parameters:
 
     $channel
 
-Optional: String, C<0> through C<3>, representing the ADC input channel to
-read from. Setting this parameter allows you to read all four channels without
-changing the default set in the object.
+Optional: See <L/INPUT CHANNELS> for parameter values and details. Specifies the
+ADC input channel to read from. Setting this parameter allows you to read all
+four channels without changing the default set in the object.
 
 Return: A floating point number between C<0> and the maximum voltage output by
 the Pi's GPIO pins.
@@ -800,23 +887,23 @@ two input channels).
 
 Single mode configuration (with the alternate parameter values):
 
-    Value   Alt     Input
-    -------------------------
+    Param   Value   Input
+    ---------------------
 
-    100     0       A0 (default)
-    101     1       A1
-    110     2       A2
-    111     3       A3
+    0       100     A0 (default)
+    1       101     A1
+    2       110     A2
+    3       111     A3
 
 Differential mode configuration:
 
-    Value   Diff between
-    --------------------
+    Param   Value   Diff between
+    ----------------------------
 
-    000     A0 <-> A1
-    001     A0 <-> A3
-    010     A1 <-> A3
-    011     A2 <-> A3
+    0       000     A0 <-> A1
+    1       001     A0 <-> A3
+    2       010     A1 <-> A3
+    3       011     A2 <-> A3
 
 
 =head3 GAIN AMPLIFIER
@@ -826,17 +913,17 @@ Bit: 11-9
 Represents the programmable gain amplifier. This software uses C<001> or
 +/-4.096V to cover the Pi's 3.3V output.
 
-    Value   Gain
-    ------------
+    Param   Value   Gain
+    --------------------
 
-    000     +/-6.144V
-    001     +/-4.096V (default)
-    010     +/-2.048V
-    011     +/-2.024V
-    100     +/-0.512V
-    101     +/-0.256V
-    110     +/-0.256V
-    111     +/-0.256V
+    0       000     +/-6.144V
+    1       001     +/-4.096V (default)
+    2       010     +/-2.048V
+    3       011     +/-2.024V
+    4       100     +/-0.512V
+    5       101     +/-0.256V
+    6       110     +/-0.256V
+    7       111     +/-0.256V
 
 =head3 OPERATION MODE
 
@@ -845,11 +932,11 @@ Bit: 8
 Represents the conversion operation mode. We use single conversion hardware
 default.
 
-    Value   Mode
-    ------------
+    Param/Value   Mode
+    ------------------
 
-    0       continuous conversion
-    1       single conversion (default)
+    0             continuous conversion
+    1             single conversion (default)
 
 =head3 DATA RATE
 
@@ -857,16 +944,16 @@ Bit: 7-5
 
 Represent the data rate. We use 128SPS by default:
 
-    Value   Rate
-    ----------------
-    000     128SPS (default)
-    001     250SPS
-    010     490SPS
-    011     920SPS
-    100     1600SPS
-    101     2400SPS
-    110     3300SPS
-    111     3300SPS
+    Param   Value   Rate
+    --------------------
+    0       000     128SPS (default)
+    1       001     250SPS
+    2       010     490SPS
+    3       011     920SPS
+    4       100     1600SPS
+    5       101     2400SPS
+    6       110     3300SPS
+    7       111     3300SPS
 
 =head3 COMPARATOR POLARITY
 
@@ -874,11 +961,11 @@ Bit: 3
 
 Represents the comparator polarity. We use C<0> (active low) by default.
 
-    Value   Polarity
-    ----------------
+    Param/Value   Polarity
+    ----------------------
 
-    0       Active Low (default)
-    1       Active High
+    0             Active Low (default)
+    1             Active High
 
 =head3 COMPARATOR QUEUE
 
@@ -886,13 +973,13 @@ Bit: 1-0
 
 Represents the comparator queue. C<11> (disabled) by default.
 
-    Value   Queue
-    -------------
+    Param   Value   Queue
+    ---------------------
 
-    00  Assert after one conversion
-    01  Assert after two conversions
-    10  Assert after four conversions
-    11  Disable comparator (default)
+    0       00  Assert after one conversion
+    1       01  Assert after two conversions
+    2       10  Assert after four conversions
+    3       11  Disable comparator (default)
 
 =head1 READING DATA
 

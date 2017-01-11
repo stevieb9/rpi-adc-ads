@@ -7,22 +7,22 @@ use Test::More;
 my $mod = 'RPi::ADC::ADS';
 
 my %map = (
-    '00' => [
+    0 => [
             49920,
             195,
             0,
         ],
-    '01' => [
+    1 => [
             49921,
             195,
             1,
         ],
-    '10' => [
+    2 => [
             49922,
             195,
             2,
         ],
-    '11' => [
+    3 => [
             49923,
             195,
             3,
@@ -39,7 +39,7 @@ my %map = (
     is $m, 195, "default msb ok";
     is $l, 3, "default lsb ok";
 
-    for (qw(00 01 10 11)){
+    for (qw(0 1 2 3)){
         $o->queue($_);
         is $o->bits, $map{$_}->[0], "$_ bits ok";
 
@@ -53,7 +53,7 @@ my %map = (
 
     my $o = $mod->new;
 
-    my $ok = eval { $o->queue('111'); 1; };
+    my $ok = eval { $o->queue(4); 1; };
 
     is $ok, undef, "dies on bad param";
     like $@, qr/queue param requires/, "...error msg ok";

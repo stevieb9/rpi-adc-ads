@@ -1,5 +1,15 @@
 Revision history for Perl extension RPi::ADC::ADS
 
+0.06    2017-01-10
+        - all configuration register options are now available (less bits 4 and
+          2)
+        - complete overhaul on setting the config register
+        - we now unset and set the config register using bitwise operators
+          instead of math hackery
+        - nearly everything has tests
+        - added extensive documentation for the software, along with all the
+          specifications of the configuration register settings
+
 0.05    2017-01-09
         - major POD cleanup
         - layout fixes in XS file

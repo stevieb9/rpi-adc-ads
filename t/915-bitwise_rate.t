@@ -7,42 +7,42 @@ use Test::More;
 my $mod = 'RPi::ADC::ADS';
 
 my %map = (
-    '000' => [
+    0 => [
             49923,
             195,
             3,
         ],
-    '001' => [
+    1 => [
             49955,
             195,
             35,
         ],
-    '010' => [
+    2 => [
             49987,
             195,
             67,
         ],
-    '011' => [
+    3 => [
             50019,
             195,
             99,
         ],
-    '100' => [
+    4 => [
             50051,
             195,
             131,
         ],
-    '101' => [
+    5 => [
             50083,
             195,
             163,
         ],
-    '110' => [
+    6 => [
             50115,
             195,
             195,
         ],
-    '111' => [
+    7 => [
             50147,
             195,
             227,
@@ -61,7 +61,7 @@ my %map = (
     is $m, 195, "default msb ok";
     is $l, 3, "default lsb ok";
 
-    for (qw(000 001 010 011 100 101 110 111)){
+    for (qw(0 1 2 3 4 5 6 7)){
         $o->rate($_);
         is $o->bits, $map{$_}->[0], "$_ bits ok";
 
@@ -72,8 +72,8 @@ my %map = (
         is $l, $map{$_}->[2], "$_ lsb ok";
     }
 
-    $o->rate('000');
-    # printf("000: %b\n", $o->bits);
+    $o->rate(0);
+    # printf("0: %b\n", $o->bits);
     is $o->bits, 49923, "000 goes back to default bits ok";
 }
 
@@ -82,7 +82,7 @@ my %map = (
 
     my $o = $mod->new;
 
-    my $ok = eval { $o->rate('11'); 1; };
+    my $ok = eval { $o->rate(9); 1; };
 
     is $ok, undef, "dies on bad param";
     like $@, qr/rate param requires/, "...error msg ok";

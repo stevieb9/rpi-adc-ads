@@ -7,42 +7,42 @@ use Test::More;
 my $mod = 'RPi::ADC::ADS';
 
 my %map = (
-    '000' => [
+    0 => [
             49411,
             193,
             3,
         ],
-    '001' => [
+    1 => [
             49923,
             195,
             3,
         ],
-    '010' => [
+    2 => [
             50435,
             197,
             3,
         ],
-    '011' => [
+    3 => [
             50947,
             199,
             3,
         ],
-    '100' => [
+    4 => [
             51459,
             201,
             3,
         ],
-    '101' => [
+    5 => [
             51971,
             203,
             3,
         ],
-    '110' => [
+    6 => [
             52483,
             205,
             3,
         ],
-    '111' => [
+    7 => [
             52995,
             207,
             3,
@@ -61,7 +61,7 @@ my %map = (
     is $m, 195, "default msb ok";
     is $l, 3, "default lsb ok";
 
-    for (qw(000 001 010 011 100 101 110 111)){
+    for (qw(0 1 2 3 4 5 6 7)){
         $o->gain($_);
         is $o->bits, $map{$_}->[0], "$_ bits ok";
 
@@ -73,9 +73,9 @@ my %map = (
 
     }
 
-    $o->gain('000');
-    # printf("000: %b\n", $o->bits);
-    is $o->bits, 49411, "000 goes back to unset bits ok";
+    $o->gain(0);
+    # printf("0: %b\n", $o->bits);
+    is $o->bits, 49411, "0 goes back to unset bits ok";
 }
 
 done_testing();
@@ -84,7 +84,7 @@ exit;
 
     my $o = $mod->new;
 
-    my $ok = eval { $o->gain('11'); 1; };
+    my $ok = eval { $o->gain(8); 1; };
 
     is $ok, undef, "dies on bad param";
     like $@, qr/gain param requires/, "...error msg ok";

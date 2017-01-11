@@ -7,42 +7,42 @@ use Test::More;
 my $mod = 'RPi::ADC::ADS';
 
 my %map = (
-    '000' => [
+    4 => [
         33539,
         131,
         3,
     ],
-    '001' => [
+    5 => [
         37635,
         147,
         3,
     ],
-    '010' => [
+    6 => [
         41731,
         163,
         3,
     ],
-    '011' => [
+    7 => [
         45827,
         179,
         3,
     ],
-    '100' => [ # default
+    0 => [ # default
         49923,
         195,
         3,
     ],
-    '101' => [
+    1 => [
         54019,
         211,
         3,
     ],
-    '110' => [
+    2 => [
         58115,
         227,
         3,
     ],
-    '111' => [
+    3 => [
         62211,
         243,
         3,
@@ -61,7 +61,7 @@ my %map = (
     is $m, 195, "default msb ok";
     is $l, 3, "default lsb ok";
 
-    for (qw(000 001 010 011 100 101 110 111)){
+    for (qw(0 1 2 3 4 5 6 7)){
         $o->channel($_);
         is $o->bits, $map{$_}->[0], "$_ bits ok";
 
@@ -72,9 +72,9 @@ my %map = (
         is $l, $map{$_}->[2], "$_ lsb ok";
     }
 
-    $o->channel('000');
-    # printf("000: %b\n", $o->bits);
-    is $o->bits, 33539, "000 goes back to default bits ok";
+    $o->channel(4);
+    # printf("0: %b\n", $o->bits);
+    is $o->bits, 33539, "0 goes back to original bits ok";
 }
 
 
@@ -82,7 +82,7 @@ my %map = (
 
     my $o = $mod->new;
 
-    my $ok = eval { $o->channel('11'); 1; };
+    my $ok = eval { $o->channel(9); 1; };
 
     is $ok, undef, "dies on bad param";
     like $@, qr/channel param requires/, "...error msg ok";
