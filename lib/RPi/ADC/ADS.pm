@@ -106,6 +106,42 @@ my %gain = (
     7 => 0xE00, # 00001110, 3584
 );
 
+BEGIN {
+
+    my $param_map = {
+        channel  => \%mux,
+        queue    => \%queue,
+        polarity => \%polarity,
+        rate     => \%rate,
+        mode     => \%mode,
+        gain     => \%gain,
+    };
+
+    no strict 'refs';
+
+    for my $sub (keys %$param_map) {
+
+        *$sub = sub {
+
+            my ($self, $opt) = @_;
+
+            if (defined $opt) {
+                if (!exists $param_map->{$sub}{$opt}) {
+                    die "$sub param requires an integer\n";
+                }
+                $self->{$sub} = $param_map->{$sub}{$opt};
+            }
+
+            my $default = "DEFAULT_" . uc $sub;
+            my $max     = "MAX_"     . uc $sub;
+
+            $self->{$sub} = __PACKAGE__->$default if !defined $self->{$sub};
+            $self->_bit_set($self->{$sub}, __PACKAGE__->$max);
+            return $self->{$sub};
+        }
+    }
+}
+
 # object methods (public)
 
 sub new {
@@ -181,90 +217,6 @@ sub model {
     $self->_resolution($model_num);
 
     return $self->{model};
-}
-sub channel {
-    my ($self, $c) = @_;
-
-    if (defined $c){
-        if (! exists $mux{$c}){
-            die "channel param requires an integer\n";
-        }
-        $self->{channel} = $mux{$c};
-    }
-
-    $self->{channel} = DEFAULT_CHANNEL if ! defined $self->{channel};
-    $self->_bit_set($self->{channel}, MAX_CHANNEL);
-    return $self->{channel};
-}
-sub queue {
-    my ($self, $q) = @_;
-
-    if (defined $q){
-        if (! exists $queue{$q}){
-            die "queue param requires an integer.\n";
-        }
-        $self->{queue} = $queue{$q};
-    }
-
-    $self->{queue} = DEFAULT_QUEUE if ! defined $self->{queue};
-    $self->_bit_set($self->{queue}, MAX_QUEUE);
-    return $self->{queue};
-}
-sub polarity {
-    my ($self, $p) = @_;
-
-    if (defined $p){
-        if (! exists $polarity{$p}){
-            die "polarity param requires an integer.\n";
-        }
-        $self->{polarity} = $polarity{$p};
-    }
-
-    $self->{polarity} = DEFAULT_POLARITY if ! defined $self->{polarity};
-    $self->_bit_set($self->{polarity}, MAX_POLARITY);
-    return $self->{polarity};
-}
-sub rate {
-    my ($self, $r) = @_;
-
-    if (defined $r){
-        if (! exists $rate{$r}){
-            die "rate param requires an integer.\n";
-        }
-        $self->{rate} = $rate{$r};
-    }
-
-    $self->{rate} = DEFAULT_RATE if ! defined $self->{rate};
-    $self->_bit_set($self->{rate}, MAX_RATE);
-    return $self->{rate};
-}
-sub mode {
-    my ($self, $m) = @_;
-
-    if (defined $m){
-        if (! exists $mode{$m}){
-            die "mode param requires an integer.\n";
-        }
-        $self->{mode} = $mode{$m};
-    }
-
-    $self->{mode} = DEFAULT_MODE if ! defined $self->{mode};
-    $self->_bit_set($self->{mode}, MAX_MODE);
-    return $self->{mode};
-}
-sub gain {
-    my ($self, $m) = @_;
-
-    if (defined $m) {
-        if (!exists $gain{$m}) {
-            die "gain param requires an integer.\n";
-        }
-        $self->{gain} = $gain{$m};
-    }
-
-    $self->{gain} = DEFAULT_GAIN if !defined $self->{gain};
-    $self->_bit_set($self->{gain}, MAX_GAIN);
-    return $self->{gain};
 }
 
 # operational methods (public)
