@@ -22,6 +22,7 @@ WriteMakefile(
             },
         },
     },
+    LICENSE => 'perl_5',
     PREREQ_PM         => {
     },
 #    CCFLAGS => => '-Wno-unused-result',
