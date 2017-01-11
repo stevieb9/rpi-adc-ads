@@ -1,6 +1,6 @@
 Revision history for Perl extension RPi::ADC::ADS
 
-0.08 UNREL
+1.00    2017-01-11
         - combined all the config register subs into a BEGIN block, we now auto
           generate them all and put them into the symbol table. This reduces a
           lot of code copy/paste
