@@ -3,7 +3,7 @@ package RPi::ADC::ADS;
 use strict;
 use warnings;
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 require XSLoader;
 XSLoader::load('RPi::ADC::ADS', $VERSION);
