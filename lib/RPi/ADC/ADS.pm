@@ -106,9 +106,13 @@ my %gain = (
     7 => 0xE00, # 00001110, 3584
 );
 
+# map of all the above config register maps
+
+my $param_map;
+
 BEGIN {
 
-    my $param_map = {
+    $param_map = {
         channel  => \%mux,
         queue    => \%queue,
         polarity => \%polarity,
@@ -726,6 +730,10 @@ Element C<1> is a byte long, and represents the most significant bits (15-8) of
 each 16-bit register, while element C<2> represents the least significant bits,
 7-0.
 
+It is advised that you don't change any of these except for the input channels
+unless you know how the hardware works, and you have a good understanding of the
+specific configuration register options.
+
 =head2 CONFIG REGISTER
 
 =head3 CONVERSATION BIT
@@ -733,18 +741,18 @@ each 16-bit register, while element C<2> represents the least significant bits,
 Bit: 15
 
 This bit should always be set to C<1> when writing. This initiates a
-conversation ADC. When reading, this bit will read C<1> if a conversion is
-currently occuring, and C<0> if the current conversion is complete.
+conversation with the ADC. When reading, this bit will read C<1> if a conversion
+is currently occuring, and C<0> if the current conversion is complete.
 
 =head3 INPUT CHANNELS
 
 Bit: 14-12
 
 Represents the ADC input channel, as well as either a single-ended
-(difference between HIGH and GRD) or differential mode (difference between
-two input channels).
+(difference between a single input channel and GRD) or differential mode
+(difference between two input channels).
 
-Single mode configuration (with the alternate parameter values):
+Single mode configuration:
 
     Param   Value   Input
     ---------------------
@@ -788,7 +796,7 @@ Represents the programmable gain amplifier. This software uses C<1> or
 
 Bit: 8
 
-Represents the conversion operation mode. We use single conversion hardware
+Represents the conversion operation mode. We use the single conversion hardware
 default.
 
     Param/Value   Mode
@@ -831,7 +839,7 @@ Represents the comparator polarity. We use C<0> (active low) by default.
 
 Bit: 1-0
 
-Represents the comparator queue. C<3> (disabled) by default.
+Represents the comparator queue. We use C<3> (disabled) by default.
 
     Param   Value   Queue
     ---------------------
