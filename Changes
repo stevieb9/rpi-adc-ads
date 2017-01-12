@@ -1,6 +1,6 @@
 Revision history for Perl extension RPi::ADC::ADS
 
-1.01 UNREL
+1.01    2017-01-11
         - removed _lsb() and _msb() as they were no longer needed or referenced
         - slight POD corrections
 
