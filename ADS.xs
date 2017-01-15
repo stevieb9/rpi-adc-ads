@@ -60,7 +60,7 @@ int fetch(int addr, char * dev, char * wbuf1, char * wbuf2, int res){
     if (res == 12){
         conversion = conversion >> 4;
     }
-   
+    
     close(i2c_file);
 
     return conversion;

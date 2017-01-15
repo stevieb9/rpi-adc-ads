@@ -3,7 +3,7 @@ package RPi::ADC::ADS;
 use strict;
 use warnings;
 
-our $VERSION = '1.01';
+our $VERSION = '1.02';
 
 require XSLoader;
 XSLoader::load('RPi::ADC::ADS', $VERSION);
@@ -320,9 +320,15 @@ sub volts {
     my $dev = $self->device;
     my @write_buf = $self->register;
 
-    return voltage_c(
+    my $v =  voltage_c(
         $addr, $dev, $write_buf[0], $write_buf[1], $self->_resolution
     );
+
+    if ($self->channel > 3 && $v < 0){
+        return 0;
+    }
+
+    return $v;
 }
 sub raw {
     my ($self, $channel) = @_;
@@ -335,7 +341,14 @@ sub raw {
     my $dev = $self->device;
     my @write_buf = $self->register;
 
-    return raw_c($addr, $dev, $write_buf[0], $write_buf[1], $self->_resolution);
+    my $r = raw_c($addr, $dev, $write_buf[0], $write_buf[1], $self->_resolution);
+
+    if ($self->channel > 3 && $r < 0){
+        return 0;
+    }
+
+    return $r;
+
 }
 sub percent {
     my ($self, $channel) = @_;
@@ -354,6 +367,10 @@ sub percent {
 
     $percent = 100 if $percent > 100;
     
+    if ($self->channel > 3 && $percent < 0){
+        return 0;
+    }
+
     return sprintf("%.2f", $percent);
 }
 

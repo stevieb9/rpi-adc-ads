@@ -1,5 +1,9 @@
 Revision history for Perl extension RPi::ADC::ADS
 
+1.02 UNREL
+        - if in single-ended mode, we now return 0 for all fetch methods, as
+          sometimes a single-ended check can result in a negative number
+
 1.01    2017-01-11
         - removed _lsb() and _msb() as they were no longer needed or referenced
         - slight POD corrections
