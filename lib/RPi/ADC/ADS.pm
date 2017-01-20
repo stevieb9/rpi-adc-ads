@@ -677,7 +677,7 @@ Implemented as:
         char * dev
         char * wbuf1
         char * wbuf2
-        int resolution
+        int res
 
 C<wbuf1> is the most significant byte (bits 15-8) for the configuration
 register, C<wbuf2> being the least significant byte (bits 7-0).
@@ -694,7 +694,7 @@ Implemented as:
         char * dev
         char * wbuf1
         char * wbuf2
-        int resolution
+        int res
 
 See L</fetch> for details on the C<wbuf> arguments.
 
@@ -710,7 +710,7 @@ Implemented as:
         char * dev
         char * wbuf1
         char * wbuf2
-        int resolution
+        int res
 
 See L</fetch> for details on the C<wbuf> arguments.
 
@@ -727,7 +727,7 @@ Implemented as:
         char * dev
         char * wbuf1
         char * wbuf2
-        int resolution
+        int res
 
 See L</fetch> for details on the C<wbuf> arguments.
 
