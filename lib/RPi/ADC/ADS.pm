@@ -429,7 +429,7 @@ List of pinout connections between the ADC and the Raspberry Pi.
 
     ADC     Pi
     -----------
-    VDD     Vcc
+    VDD     3.3V+
     GND     Gnd
     SCL     SCL
     SDA     SDA
@@ -606,13 +606,12 @@ for those who want to tinker with the innards.
 
 =head2 bits
 
-Separates the 16-bit wide configuration register and returns an array
-containing the Most Significant Byte as the first element, and the Least
-Significant Byte as the second element.
+Merges the two 8-bit bytes of the configuration register as its currently
+configured, and returns it as one 16-bit integer.
 
 Parameters: None
 
-Return: Array of two elements (MSB, LSB).
+Return: 16-bit signed integer.
 
 =head2 register 
 
