@@ -1,5 +1,8 @@
 Revision history for Perl extension RPi::ADC::ADS
 
+1.03 UNREL
+        -
+
 1.02    2017-07-20
         - if in single-ended mode, we now return 0 for all fetch methods, as
           sometimes a single-ended check can result in a negative number
