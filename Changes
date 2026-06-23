@@ -1,7 +1,14 @@
 Revision history for Perl extension RPi::ADC::ADS
 
 1.03 UNREL
-        -
+        - Added conversion averaging. volts(), percent() and raw() take an
+          optional trailing $samples count, and new(samples => N) / samples()
+          set a per-object default (default 1 = unchanged single-read
+          behaviour). The mean of N conversions is computed in the XS over a
+          single i2c bus session, which recovers a stable reading from a noisy
+          or ripple-laden input (e.g. an RC-filtered PWM feedback signal) far
+          more cheaply than N separate reads
+        - Fix unused read() calls warning
 
 1.02    2017-07-20
         - if in single-ended mode, we now return 0 for all fetch methods, as

@@ -20,6 +20,7 @@ t/30-resolution.t
 t/40-volts.t
 t/45-percent.t
 t/50-raw.t
+t/55-samples.t
 t/900-bitwise_queue.t
 t/910-bitwise_polarity.t
 t/915-bitwise_rate.t
