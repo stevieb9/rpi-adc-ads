@@ -14,6 +14,9 @@ Revision history for Perl extension RPi::ADC::ADS
           bus stays unresponsive past MAX_I2C_ATTEMPTS. Without this, the new
           read-return checks turned an occasional bus glitch into a hard exit,
           which averaging (many conversions per call) made likely
+        - Fixed new() ignoring the gain => argument: it passed $args{mode} to
+          gain() instead of $args{gain}, so a gain => in the constructor was
+          dropped and a mode => corrupted the gain. Added t/02-new_gain.t
 
 1.02    2017-07-20
         - if in single-ended mode, we now return 0 for all fetch methods, as

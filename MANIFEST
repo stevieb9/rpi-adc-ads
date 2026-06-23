@@ -11,6 +11,7 @@ ppport.h
 README
 t/00-load.t
 t/01-new.t
+t/02-new_gain.t
 t/05-_register_data.t
 t/10-addr.t
 t/15-channel.t

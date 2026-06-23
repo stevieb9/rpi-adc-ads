@@ -169,7 +169,7 @@ sub new {
     $self->queue($args{queue});
     $self->polarity($args{polarity});
     $self->mode($args{mode});
-    $self->gain($args{mode});
+    $self->gain($args{gain});
 
     # default number of conversions to average per read (1 = single read)
 
