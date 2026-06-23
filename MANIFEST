@@ -19,6 +19,7 @@ t/20-device.t
 t/25-model.t
 t/30-resolution.t
 t/40-volts.t
+t/41-volts_gain.t
 t/45-percent.t
 t/50-raw.t
 t/55-samples.t

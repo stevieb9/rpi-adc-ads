@@ -17,6 +17,11 @@ Revision history for Perl extension RPi::ADC::ADS
         - Fixed new() ignoring the gain => argument: it passed $args{mode} to
           gain() instead of $args{gain}, so a gain => in the constructor was
           dropped and a mode => corrupted the gain. Added t/02-new_gain.t
+        - volts() and percent() now scale by the programmed PGA full-scale
+          range instead of a constant 4.096V, so they are correct at any gain
+          (previously every non-default gain was mis-scaled). The PGA is read
+          from the config register; default-gain (1, +/-4.096V) output is
+          unchanged. Added t/41-volts_gain.t
 
 1.02    2017-07-20
         - if in single-ended mode, we now return 0 for all fetch methods, as
