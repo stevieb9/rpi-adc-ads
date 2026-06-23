@@ -14,6 +14,11 @@
 #define BIT_MAX_12 1650
 #define BIT_MAX_16 26400
 
+// Per-conversion i2c retry cap. The Pi bus intermittently throws transient
+// errors (e.g. EREMOTEIO); we retry the conversion rather than abort, but bail
+// loudly if the bus is persistently unresponsive.
+#define MAX_I2C_ATTEMPTS 1000
+
 int fetch(int addr, char * dev, char * wbuf1, char * wbuf2, int res, int samples){
 
     uint8_t write_buf[3];
@@ -45,46 +50,69 @@ int fetch(int addr, char * dev, char * wbuf1, char * wbuf2, int res, int samples
 
     for (int s = 0; s < samples; s++){
 
-        write_buf[0] = 1; // set pointer to config register
-        write_buf[1] = strtol(wbuf1, NULL, 0);
-        write_buf[2] = strtol(wbuf2, NULL, 0);
+        int16_t conversion = 0;
+        int got = 0;
+        int attempts = 0;
 
-        read_buf[0] = 0;
-        read_buf[1] = 0;
+        // Acquire one conversion, retrying on a transient i2c error rather than
+        // aborting. Averaging many conversions makes a single bus glitch likely,
+        // and a conversion-ready poll must tolerate the odd failed read; we only
+        // bail (loudly) if the bus stays unresponsive past MAX_I2C_ATTEMPTS.
 
-        if (write(i2c_file, write_buf, 3) != 3){
-            perror("failed to write to the i2c bus");
-            exit(1);
-        }
+        while (! got){
 
-        // AND with 10000000 and wait for bit 15 of the config register to go
-        // false. This bit stores the "conversion complete" indicator
-
-        while ((read_buf[0] & 0x80) == 0){
-            if (read(i2c_file, read_buf, 2) != 2){
-                perror("failed to read from the i2c bus");
+            if (++attempts > MAX_I2C_ATTEMPTS){
+                fprintf(stderr, "fetch: i2c bus unresponsive after %d attempts\n",
+                        attempts);
                 exit(1);
             }
-        }
 
-        // 0: conversion register
-        // 1: configuration register
+            write_buf[0] = 1; // set pointer to config register
+            write_buf[1] = strtol(wbuf1, NULL, 0);
+            write_buf[2] = strtol(wbuf2, NULL, 0);
 
-        write_buf[0] = 0;
-        if (write(i2c_file, write_buf, 1) != 1){
-            perror("failed to write to the i2c bus");
-            exit(1);
-        }
+            read_buf[0] = 0;
+            read_buf[1] = 0;
 
-        if (read(i2c_file, read_buf, 2) != 2){
-            perror("failed to read from the i2c bus");
-            exit(1);
-        }
+            if (write(i2c_file, write_buf, 3) != 3){
+                continue;
+            }
 
-        int16_t conversion = read_buf[0] << 8 | read_buf[1];
+            // AND with 10000000 and wait for bit 15 of the config register to
+            // go false. This bit stores the "conversion complete" indicator.
 
-        if (res == 12){
-            conversion = conversion >> 4;
+            int ready = 1;
+
+            while ((read_buf[0] & 0x80) == 0){
+                if (read(i2c_file, read_buf, 2) != 2){
+                    ready = 0;
+                    break;
+                }
+            }
+
+            if (! ready){
+                continue;
+            }
+
+            // 0: conversion register
+            // 1: configuration register
+
+            write_buf[0] = 0;
+            if (write(i2c_file, write_buf, 1) != 1){
+                continue;
+            }
+
+            if (read(i2c_file, read_buf, 2) != 2){
+                continue;
+            }
+
+            conversion = read_buf[0] << 8 | read_buf[1];
+
+            if (res == 12){
+                conversion = conversion >> 4;
+            }
+
+            got = 1;
         }
 
         sum += conversion;

@@ -9,6 +9,11 @@ Revision history for Perl extension RPi::ADC::ADS
           or ripple-laden input (e.g. an RC-filtered PWM feedback signal) far
           more cheaply than N separate reads
         - Fix unused read() calls warning
+        - fetch() now retries a conversion on a transient i2c error (e.g. the
+          Pi's intermittent EREMOTEIO) instead of aborting, bailing only if the
+          bus stays unresponsive past MAX_I2C_ATTEMPTS. Without this, the new
+          read-return checks turned an occasional bus glitch into a hard exit,
+          which averaging (many conversions per call) made likely
 
 1.02    2017-07-20
         - if in single-ended mode, we now return 0 for all fetch methods, as
