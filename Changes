@@ -1,6 +1,6 @@
 Revision history for Perl extension RPi::ADC::ADS
 
-1.03 UNREL
+1.03    2026-06-22
         - Added conversion averaging. volts(), percent() and raw() take an
           optional trailing $samples count, and new(samples => N) / samples()
           set a per-object default (default 1 = unchanged single-read
