@@ -248,7 +248,7 @@ sub register {
             die "register() requires \$msb and \$lsb params\n";
         }
         if (! grep {$msb == $_} (0..255)){
-            die "msg param requires an int 0..255\n";
+            die "msb param requires an int 0..255\n";
         }
         if (! grep {$lsb == $_} (0..255)){
             die "lsb param requires an int 0..255\n";

@@ -1,7 +1,17 @@
 Revision history for Perl extension RPi::ADC::ADS
 
 1.04 UNREL
-    -
+    - Fixed register()'s out-of-range error for the MSB: it read "msg param
+      requires an int 0..255" (typo), now "msb param requires an int 0..255"
+    - Fixed t/925-bitwise_gain.t: a stray mid-file done_testing()/exit dead-coded
+      the gain() bad-param block, so the gain(8) validation croak was never
+      tested; removed it so the block runs
+    - Added t/26-register.t: HW-free coverage of register() validation (missing
+      lsb, msb/lsb 0..255 bounds), the set->bits round-trip, and _bit_set()
+      field clear/set/preserve isolation
+    - Added t/56-samples_validation.t: HW-free coverage of _samples() (the
+      per-call averaging validator) - rejects 0/negative/non-integer, returns
+      the value, and falls back to the object default on undef
 
 1.03    2026-06-22
         - Added conversion averaging. volts(), percent() and raw() take an

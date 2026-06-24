@@ -78,8 +78,6 @@ my %map = (
     is $o->bits, 49411, "0 goes back to unset bits ok";
 }
 
-done_testing();
-exit;
 { # bad
 
     my $o = $mod->new;
