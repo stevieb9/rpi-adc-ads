@@ -84,8 +84,9 @@ int fetch(int addr, char * dev, char * wbuf1, char * wbuf2, int res, int samples
                 continue;
             }
 
-            // AND with 10000000 and wait for bit 15 of the config register to
-            // go false. This bit stores the "conversion complete" indicator.
+            // AND with 10000000 and wait for bit 15 (OS) of the config
+            // register to read 1 - the "not currently performing a conversion"
+            // state. It reads 0 while a conversion is in progress.
 
             int ready = 1;
 

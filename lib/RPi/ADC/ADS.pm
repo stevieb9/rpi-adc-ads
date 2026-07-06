@@ -681,7 +681,7 @@ for those who understand the hardware very well. It really shouldn't be used
 otherwise.
 
 Parameters:
-    
+
     $msb, $lsb
 
 Optional: If one is sent in, both must be sent in. C<$msb> is the most
@@ -807,6 +807,28 @@ See L</fetch> for details on the C<wbuf> arguments.
 
 =head1 TECHNICAL DATA
 
+=head2 DEVICE SPECIFICS
+
+    - Six-part family: ADS1013/14/15 are 12-bit, ADS1113/14/15 are 16-bit
+    - Delta-sigma ADC with internal voltage reference and oscillator
+    - Data rates: 128SPS-3.3kSPS on the 12-bit parts, 8SPS-860SPS on the
+      16-bit parts
+    - ADS1x15: four single-ended or two differential inputs via the mux;
+      ADS1x13/1x14 measure the single AIN0/AIN1 pair
+    - Programmable gain amplifier on ADS1x14/1x15: +/-6.144V down to
+      +/-0.256V full-scale
+    - Comparator with ALERT/RDY output on ADS1x14/1x15; this module runs
+      with it disabled and the ALRT pin unconnected
+    - Runs at 2.0-5.5V, so the Pi's 3.3V rail is fine; ~150uA continuous
+      draw, and the default single-shot mode powers down between reads
+    - I2C standard (100kHz), fast (400kHz) and high-speed (3.4MHz) modes;
+      four strap-selectable bus addresses, 0x48-0x4B
+
+Wiring between the ADC and the Pi, including strapping the C<ADDR> pin to
+select among the four bus addresses, is covered in L</PHYSICAL SETUP>. Note
+that the PGA full-scale ranges are ADC scaling, not input protection - never
+drive an input pin beyond VDD + 0.3V, whatever the gain setting.
+
 =head2 REGISTERS
 
 Both the conversion and configuration registers are 16-bits wide.
@@ -826,13 +848,13 @@ specific configuration register options.
 
 =head2 CONFIG REGISTER
 
-=head3 CONVERSATION BIT
+=head3 CONVERSION BIT
 
 Bit: 15
 
 This bit should always be set to C<1> when writing. This initiates a
-conversation with the ADC. When reading, this bit will read C<1> if a conversion
-is currently occuring, and C<0> if the current conversion is complete.
+conversion within the ADC. When reading, this bit will read C<0> while a
+conversion is currently occurring, and C<1> once the conversion is complete.
 
 =head3 INPUT CHANNELS
 
@@ -938,6 +960,87 @@ Represents the comparator queue. We use C<3> (disabled) by default.
     1       01  Assert after two conversions
     2       10  Assert after four conversions
     3       11  Disable comparator (default)
+
+=head2 ON THE WIRE
+
+This is what a data retrieval looks like on the bus as it is clocked in
+and out. L</volts>, L</raw> and L</percent> all funnel into the same C
+function, C<fetch()>, so every read is the same four-frame conversation.
+Time flows left to right, one box per byte, bits go out MSB-first, and
+every 9th clock is an ACK slot:
+
+    S = START    P = STOP
+    A = ACK (receiver pulls SDA low)    N = NACK (master, "no more bytes")
+
+The XS layer drives the kernel's C</dev/i2c-N> interface with plain
+C<write()> and C<read()> calls, so each frame below is its own complete
+START-to-STOP transaction - there are no repeated STARTs. State carries
+between frames in the chip's register pointer, which persists until the
+next write.
+
+Frame 1 selects the config register (pointer C<01>) and loads it, all in
+one three-byte write. A default object - address C<0x48>, channel C<0>,
+gain C<1> - writes config bytes C<0xC3 0x03>:
+
+    +---+------+---+------+---+------+---+------+---+---+
+    | S | 0x90 | A | 0x01 | A | 0xC3 | A | 0x03 | A | P |
+    +---+------+---+------+---+------+---+------+---+---+
+         addr+W     pointer    config     config
+         (0x48)     = config   MSB        LSB
+
+The two config bytes split into the L</CONFIG REGISTER> fields:
+
+    0xC3 (MSB)                  0x03 (LSB)
+    +----+-----+-----+------+   +-----+-----+-----+-----+----+
+    | 1  | 100 | 001 | 1    |   | 000 | 0   | 0   | 0   | 11 |
+    +----+-----+-----+------+   +-----+-----+-----+-----+----+
+      OS   MUX   PGA   MODE       DR    C_M   C_P   C_L   C_Q
+
+    OS   = 1    Begin a single conversion
+    MUX  = 100  AIN0, single-ended
+    PGA  = 001  +/-4.096V full-scale
+    MODE = 1    Single-shot
+    DR   = 000  128SPS (means 8SPS on the 16-bit ADS111x parts)
+    C_*  = 0    Comparator mode/polarity/latch defaults
+    C_Q  = 11   Comparator disabled
+
+Frame 2 polls for completion. The pointer still says config, so a bare
+two-byte read returns the config register, and C<fetch()> re-reads it
+until the C<OS> bit comes back C<1> - the chip's "not currently
+performing a conversion" state:
+
+    +---+------+---+-----+---+-----+---+---+
+    | S | 0x91 | A | MSB | A | LSB | N | P |    Repeated while
+    +---+------+---+-----+---+-----+---+---+    (MSB & 0x80) == 0
+         addr+R     Chip drives the data
+
+Frame 3 re-points at the conversion register (pointer C<00>), a one-byte
+write:
+
+    +---+------+---+------+---+---+
+    | S | 0x90 | A | 0x00 | A | P |
+    +---+------+---+------+---+---+
+         addr+W     pointer
+                    = conversion
+
+Frame 4 reads the result, MSB first, the master NACKing the final byte.
+A 1.65V input on an ADS1015 at the default gain comes back as:
+
+    +---+------+---+------+---+------+---+---+
+    | S | 0x91 | A | 0x33 | A | 0x90 | N | P |
+    +---+------+---+------+---+------+---+---+
+         addr+R     conv       conv
+                    MSB        LSB
+
+The conversion register is 16-bit twos complement, and on the 12-bit
+parts the value arrives left-justified - D11..D0 occupy bits 15-4 and
+the low four bits always read C<0> - so the XS shifts the word right by
+four: C<0x3390> above becomes C<0x339> (825), and 825 * 4.096 / 2048
+gives the 1.65V that L</volts> returns.
+
+With L</samples> averaging N conversions, the four frames repeat per
+conversion over a single open file descriptor, and a conversion that
+fails mid-frame is retried rather than aborting the batch.
 
 =head1 READING DATA
 

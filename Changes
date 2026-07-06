@@ -12,6 +12,13 @@ Revision history for Perl extension RPi::ADC::ADS
     - Added t/56-samples_validation.t: HW-free coverage of _samples() (the
       per-call averaging validator) - rejects 0/negative/non-integer, returns
       the value, and falls back to the object default on undef
+    - Added DEVICE SPECIFICS and ON THE WIRE sections to the POD's TECHNICAL
+      DATA: chip capability summary, and byte-by-byte I2C transaction diagrams
+      of the four-frame read sequence, verified against the ADS101x/ADS111x
+      datasheets
+    - Fixed CONVERSION BIT POD (was "CONVERSATION BIT"): the OS bit read
+      semantics were documented inverted (it reads 0 while converting, 1 when
+      complete); fixed the matching stale comment in ADS.xs fetch()
 
 1.03    2026-06-22
         - Added conversion averaging. volts(), percent() and raw() take an
