@@ -19,6 +19,20 @@ Revision history for Perl extension RPi::ADC::ADS
     - Fixed CONVERSION BIT POD (was "CONVERSATION BIT"): the OS bit read
       semantics were documented inverted (it reads 0 while converting, 1 when
       complete); fixed the matching stale comment in ADS.xs fetch()
+    - Fixed DATA RATE POD: the table showed only the 12-bit ADS101x rates
+      (128SPS-3300SPS); the same DR bits mean 8SPS-860SPS on the 16-bit
+      ADS111x parts, so the module's default of 000 is 8SPS there, not
+      128SPS. Now documents a per-family table (verified against
+      SBAS473C/SBAS444B)
+    - Bundled the datasheet as docs/datasheet/ads1015.pdf and added a
+      DATASHEET POD section pointing to it; repointed the inline READING
+      DATA datasheet link off its web URL
+    - Added the two new tests to MANIFEST (t/26-register.t,
+      t/56-samples_validation.t)
+    - Tightened model() validation to reject the SPI-only ADS1018/ADS1118:
+      this I2C driver reaches only the six I2C parts (ADS1013/14/15 and
+      ADS1113/14/15), so the model regex now ends [345] not [3458]. Updated
+      the die message, the POD valid-values line, and t/25-model.t to match
 
 1.03    2026-06-22
         - Added conversion averaging. volts(), percent() and raw() take an

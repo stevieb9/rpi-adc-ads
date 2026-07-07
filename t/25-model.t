@@ -18,7 +18,7 @@ my $mod = 'RPi::ADC::ADS';
     my $obj = $mod->new;
 
 
-    for my $d (qw(13 14 15 18)){
+    for my $d (qw(13 14 15)){
         for (qw(10 11)) {
             my $dev = 'ADS'."${_}$d";
             is $obj->model( $dev ), $dev, "$dev model ok";
@@ -30,7 +30,7 @@ my $mod = 'RPi::ADC::ADS';
 
     my $obj = $mod->new;
 
-    for (qw(BDS1015 ADC1015 ADS2015 ADS1215 ADS1119 ADS1016 ADS1017)){
+    for (qw(BDS1015 ADC1015 ADS2015 ADS1215 ADS1119 ADS1016 ADS1017 ADS1018 ADS1118)){
         my $ok = eval { $obj->model($_); 1; };
         is $ok, undef, "dies with model $_, which is out of bounds";
         like $@, qr/invalid model name/, "...with proper error msg";

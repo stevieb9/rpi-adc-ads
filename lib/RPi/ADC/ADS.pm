@@ -211,9 +211,9 @@ sub model {
     my ($self, $model) = @_;
 
     if (defined $model){
-        if ($model !~ /^ADS1[01]1[3458]/){
+        if ($model !~ /^ADS1[01]1[345]/){
             die "invalid model name: $model. " .
-                "Must be 'ADS1x1y' where x is 1 or 0, and y is 3, 4, 5 or 8\n";
+                "Must be 'ADS1x1y' where x is 1 or 0, and y is 3, 4 or 5\n";
         }
         $self->{model} = $model
     }
@@ -576,7 +576,9 @@ Parameters:
     $model
 
 Optional: String, the model name of the ADC unit. Defaults to C<ADS1015>. Valid
-values are C</ADS1[01]1[3458]/>.
+values are the six I2C parts C<ADS1013>, C<ADS1014>, C<ADS1015> (12-bit) and
+C<ADS1113>, C<ADS1114>, C<ADS1115> (16-bit); the SPI-only C<ADS1018>/C<ADS1118>
+cannot be driven over I2C and are rejected.
 
 =head2 channel
 
@@ -921,7 +923,16 @@ default.
 
 Bit: 7-5
 
-Represent the data rate. We use 128SPS (128 Samples Per Second) by default:
+Represent the data rate (SPS = Samples Per Second). The same bit values
+select different rates on each family: the 12-bit ADS101x parts span
+128SPS to 3300SPS, while the 16-bit ADS111x parts trade speed for
+resolution and span 8SPS to 860SPS.
+
+We write C<000> by default, which selects 128SPS on an ADS101x but 8SPS
+on an ADS111x - at 8SPS a single conversion takes ~125ms, so raise the
+rate (eg. param C<4> for 128SPS) if reads on a 16-bit part feel slow.
+
+ADS1013/1014/1015 (12-bit):
 
     Param   Value   Rate
     --------------------
@@ -934,6 +945,20 @@ Represent the data rate. We use 128SPS (128 Samples Per Second) by default:
     5       101     2400SPS
     6       110     3300SPS
     7       111     3300SPS
+
+ADS1113/1114/1115 (16-bit):
+
+    Param   Value   Rate
+    --------------------
+
+    0       000     8SPS (default)
+    1       001     16SPS
+    2       010     32SPS
+    3       011     64SPS
+    4       100     128SPS
+    5       101     250SPS
+    6       110     475SPS
+    7       111     860SPS
 
 =head3 COMPARATOR POLARITY
 
@@ -1042,6 +1067,14 @@ With L</samples> averaging N conversions, the four frames repeat per
 conversion over a single open file descriptor, and a conversion that
 fails mid-frame is retried rather than aborting the batch.
 
+=head2 DATASHEET
+
+The Texas Instruments ADS1013/1014/1015 datasheet (SBAS473C) is
+distributed with this software as F<docs/datasheet/ads1015.pdf>. It
+documents the config register, the data rates, and the conversion framing
+this module's stack implements; the 16-bit ADS111x parts this module also
+drives share the same register map.
+
 =head1 READING DATA
 
 Each channel has a conversion register (that contains the actual analog input).
@@ -1051,8 +1084,8 @@ ADC11xx series ADCs, the width is actually 15 bits, and the ADC10xx units are
 11 bits wide (as the resolution on these models are only 12-bit as opposed to
 16-bit).
 
-See the L<ADC's datasheet|https://cdn-shop.adafruit.com/datasheets/ads1015.pdf>
-for further information.
+See the ADC's datasheet, bundled with this distribution as
+F<docs/datasheet/ads1015.pdf>, for further information.
 
 =head1 NOTES
 

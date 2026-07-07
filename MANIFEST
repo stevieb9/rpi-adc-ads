@@ -1,6 +1,7 @@
 .travis.yml.bad
 ADS.xs
 Changes
+docs/datasheet/ads1015.pdf
 examples/bit_manipulation.pl
 examples/input.pl
 lib/RPi/ADC/ADS.pm
@@ -17,12 +18,14 @@ t/10-addr.t
 t/15-channel.t
 t/20-device.t
 t/25-model.t
+t/26-register.t
 t/30-resolution.t
 t/40-volts.t
 t/41-volts_gain.t
 t/45-percent.t
 t/50-raw.t
 t/55-samples.t
+t/56-samples_validation.t
 t/900-bitwise_queue.t
 t/910-bitwise_polarity.t
 t/915-bitwise_rate.t
