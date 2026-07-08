@@ -886,6 +886,10 @@ Differential mode configuration:
     6       010     A1 <-> A3
     7       011     A2 <-> A3
 
+The input multiplexer exists only on the ADS1015/1115. On the
+ADS1013/1113 and ADS1014/1114 the input is fixed to the AIN0/AIN1
+differential pair, and these bits have no effect.
+
 
 =head3 GAIN AMPLIFIER
 
@@ -893,6 +897,10 @@ Bit: 11-9
 
 Represents the programmable gain amplifier. This software uses C<1> or
 +/-4.096V to cover the Pi's 3.3V output.
+
+The PGA exists only on the ADS1014/1114 and ADS1015/1115. On the
+ADS1013/1113 the full-scale range is fixed at +/-2.048V and these bits
+have no effect.
 
     Param   Value   Gain
     --------------------
@@ -960,6 +968,26 @@ ADS1113/1114/1115 (16-bit):
     6       110     475SPS
     7       111     860SPS
 
+The comparator (and every field below) exists only on the ADS1014/1114
+and ADS1015/1115. On the ADS1013/1113 the COMP_MODE, COMPARATOR
+POLARITY, COMP_LAT and COMPARATOR QUEUE bits have no function.
+
+=head3 COMPARATOR MODE
+
+Bit: 4
+
+Selects the comparator type (the COMP_MODE bit). We leave it at C<0>
+(traditional). In traditional mode the ALERT/RDY pin asserts once a
+conversion exceeds the high-threshold register and deasserts when it
+falls below the low-threshold register; in window mode it asserts
+whenever a conversion is outside either threshold.
+
+    Param/Value   Mode
+    ------------------
+
+    0             Traditional comparator (default)
+    1             Window comparator
+
 =head3 COMPARATOR POLARITY
 
 Bit: 3
@@ -971,6 +999,21 @@ Represents the comparator polarity. We use C<0> (active low) by default.
 
     0             Active Low (default)
     1             Active High
+
+=head3 COMPARATOR LATCH
+
+Bit: 2
+
+Controls whether an ALERT/RDY assertion latches (the COMP_LAT bit). We
+leave it at C<0> (non-latching). When set, an assertion is held until
+the conversion register is read, even if the input returns within the
+threshold bounds.
+
+    Param/Value   Latch
+    -------------------
+
+    0             Non-latching (default)
+    1             Latching
 
 =head3 COMPARATOR QUEUE
 

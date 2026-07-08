@@ -36,6 +36,12 @@ Revision history for Perl extension RPi::ADC::ADS
     - Fixed t/30-resolution.t: it iterated model suffixes qw(13 14 15 18),
       constructing ADS1018/ADS1118 which the tightened model() now rejects,
       so the suite died mid-run; dropped 18 from both loops
+    - Documented the two previously-undocumented CONFIG REGISTER fields:
+      COMPARATOR MODE (bit 4, traditional vs window) and COMPARATOR LATCH
+      (bit 2), both left at 0; verified against the ADS1015 datasheet
+      (SBAS473). Added per-model applicability notes to the INPUT CHANNELS,
+      GAIN AMPLIFIER and comparator fields (MUX on the x15 parts only; PGA on
+      x14/x15; the comparator block on x14/x15 - no function on ADS1013/1113)
 
 1.03    2026-06-22
         - Added conversion averaging. volts(), percent() and raw() take an
