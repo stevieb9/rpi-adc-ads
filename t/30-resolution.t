@@ -15,13 +15,13 @@ my $mod = 'RPi::ADC::ADS';
 {
     my $obj = $mod->new;
 
-    for my $d (qw(13 14 15 18)){
+    for my $d (qw(13 14 15)){
         my $model = "ADS10$d";
         $obj->model($model);
         is $obj->_resolution, 12, "model $model has ok resolution";
     }
 
-    for my $d (qw(13 14 15 18)){
+    for my $d (qw(13 14 15)){
         my $model = "ADS11$d";
         $obj->model($model);
         is $obj->_resolution, 16, "model $model has ok resolution";

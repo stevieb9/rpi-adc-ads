@@ -33,6 +33,9 @@ Revision history for Perl extension RPi::ADC::ADS
       this I2C driver reaches only the six I2C parts (ADS1013/14/15 and
       ADS1113/14/15), so the model regex now ends [345] not [3458]. Updated
       the die message, the POD valid-values line, and t/25-model.t to match
+    - Fixed t/30-resolution.t: it iterated model suffixes qw(13 14 15 18),
+      constructing ADS1018/ADS1118 which the tightened model() now rejects,
+      so the suite died mid-run; dropped 18 from both loops
 
 1.03    2026-06-22
         - Added conversion averaging. volts(), percent() and raw() take an
