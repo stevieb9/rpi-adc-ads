@@ -42,6 +42,10 @@ Revision history for Perl extension RPi::ADC::ADS
       (SBAS473). Added per-model applicability notes to the INPUT CHANNELS,
       GAIN AMPLIFIER and comparator fields (MUX on the x15 parts only; PGA on
       x14/x15; the comparator block on x14/x15 - no function on ADS1013/1113)
+    - Added a Makefile.PL build guard: the family-canonical
+      RPi::Const::BuildCheck::i2c_build_check() (via CONFIGURE_REQUIRES), so a
+      missing I2C development header now exits NA rather than FAIL on CPAN
+      testers; this XS dist previously had no such guard
 
 1.03    2026-06-22
         - Added conversion averaging. volts(), percent() and raw() take an
