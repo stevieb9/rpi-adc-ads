@@ -147,14 +147,33 @@ static float pga_fsr(char * wbuf1){
     }
 }
 
+// Pure scaling helpers, exposed (underscore-private) for hardware-free
+// verification: the same math voltage_c/percent_c apply, but taking a raw
+// conversion value directly instead of fetching one over i2c - so the
+// FSR/resolution scaling is testable without the chip. The live callers below
+// route through them, so there is a single source of truth for the math.
+
+float _pga_fsr (char * wbuf1){
+    return pga_fsr(wbuf1);
+}
+
+float _scale_volts (int conversion, char * wbuf1, int res){
+    float fsr = pga_fsr(wbuf1);
+    float fs  = (res == 12) ? ADS_FS_12 : ADS_FS_16;
+    return (float)conversion * fsr / fs;
+}
+
+float _scale_percent (int conversion, char * wbuf1, int res){
+    float fsr = pga_fsr(wbuf1);
+    float fs  = (res == 12) ? ADS_FS_12 : ADS_FS_16;
+    return (float)conversion * fsr / fs / ADS_VREF * 100.0;
+}
+
 float voltage_c (int addr, char * dev, char * wbuf1, char * wbuf2, int res, int samples){
 
     int conversion = fetch(addr, dev, wbuf1, wbuf2, res, samples);
 
-    float fsr = pga_fsr(wbuf1);
-    float fs  = (res == 12) ? ADS_FS_12 : ADS_FS_16;
-
-    return (float)conversion * fsr / fs;
+    return _scale_volts(conversion, wbuf1, res);
 }
 
 int raw_c (int addr, char * dev, char * wbuf1, char * wbuf2, int res, int samples){
@@ -168,12 +187,9 @@ float percent_c (int addr, char * dev, char * wbuf1, char * wbuf2, int res, int 
 
     int conversion = fetch(addr, dev, wbuf1, wbuf2, res, samples);
 
-    float fsr = pga_fsr(wbuf1);
-    float fs  = (res == 12) ? ADS_FS_12 : ADS_FS_16;
-
-    // The input as a percentage of the 3.3V GPIO range, now scaled by the
+    // The input as a percentage of the 3.3V GPIO range, scaled by the
     // programmed PGA's full-scale range rather than a constant 4.096V.
-    return (float)conversion * fsr / fs / ADS_VREF * 100.0;
+    return _scale_percent(conversion, wbuf1, res);
 }
 
 MODULE = RPi::ADC::ADS  PACKAGE = RPi::ADC::ADS
@@ -215,3 +231,19 @@ percent_c (addr, dev, wbuf1, wbuf2, res, samples)
     char * wbuf2
     int res
     int samples
+
+float
+_pga_fsr (wbuf1)
+    char * wbuf1
+
+float
+_scale_volts (conversion, wbuf1, res)
+    int conversion
+    char * wbuf1
+    int res
+
+float
+_scale_percent (conversion, wbuf1, res)
+    int conversion
+    char * wbuf1
+    int res

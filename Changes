@@ -46,6 +46,12 @@ Revision history for Perl extension RPi::ADC::ADS
       RPi::Const::BuildCheck::i2c_build_check() (via CONFIGURE_REQUIRES), so a
       missing I2C development header now exits NA rather than FAIL on CPAN
       testers; this XS dist previously had no such guard
+    - Added t/06-scale.t: hardware-free coverage of the ADC scaling math.
+      Exposed the pure _pga_fsr / _scale_volts / _scale_percent helpers from
+      ADS.xs (the conversion * FSR / full-scale and /VREF*100 math) and routed
+      voltage_c/percent_c through them, so the PGA full-scale table and the
+      12-/16-bit scaling are now verifiable without the chip - the 12-bit
+      production path previously had zero hardware-free coverage
 
 1.03    2026-06-22
         - Added conversion averaging. volts(), percent() and raw() take an
