@@ -450,6 +450,16 @@ on Raspberry Pi
     my $percent = $adc->percent(3);
     ...
 
+    # Conversion mode / power
+
+    # mode 1 (the default) is single-shot: the ADC takes one conversion per
+    # read and powers its analog core down in between - the low-power choice.
+    # mode 0 is continuous: the core keeps converting (and drawing) between
+    # reads. Set it back to single-shot when you're done sampling.
+
+    $adc->mode(0);      # continuous
+    $adc->mode(1);      # single-shot (powers down between reads)
+
 =head1 DESCRIPTION
 
 Perl interface to the Texas Instruments/Adafruit ADS 1xxx series Analog to

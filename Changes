@@ -52,6 +52,9 @@ Revision history for Perl extension RPi::ADC::ADS
       voltage_c/percent_c through them, so the PGA full-scale table and the
       12-/16-bit scaling are now verifiable without the chip - the 12-bit
       production path previously had zero hardware-free coverage
+    - Documented the conversion mode / power tradeoff in the SYNOPSIS: mode 1
+      (single-shot, the default) powers the analog core down between reads,
+      mode 0 (continuous) keeps it converting and drawing
 
 1.03    2026-06-22
         - Added conversion averaging. volts(), percent() and raw() take an
